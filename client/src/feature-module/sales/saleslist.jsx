@@ -71,7 +71,7 @@ const SalesList = () => {
       search: search,
     },
     {
-      skip: !pos?._id,
+      skip: !pos?._id || search === "",
     }
   );
   const [createOrder] = useCreateOrderMutation();
@@ -165,11 +165,9 @@ const SalesList = () => {
     const payment = Number(fromData.payment) || 0;
     const due = Number(fromData.due) || 0;
 
-    // Total Discount & Tax আপনার state থেকেই নিচ্ছেন — ঠিক আছে
     const orderDiscount = totalDiscount || 0;
     const orderTax = totalOrderTax || 0;
 
-    // productsTotal আপনি আগেই উপরে useState এর বাইরে calculate করছেন — আবার এখানে calculate করতে হবে
     const productsTotal = selectedProduct.reduce(
       (acc, curr) => acc + Number(curr.price),
       0
@@ -221,10 +219,6 @@ const SalesList = () => {
         timer: 1000,
       });
     }
-
-    // Dispatch/submit your order
-    // dispatch(createOrder(payload));
-    // or use axios/post etc.
   };
 
   useEffect(() => {
@@ -763,81 +757,89 @@ const SalesList = () => {
                           </table>
                         </div>
                         {/* table for selecte product */}
-                        <div className="text-center my-4">
-                          <h2 className="fw-bold text-primary">
-                            Selected Product
-                          </h2>
-                        </div>
+                        {selectedProduct?.length > 0 && (
+                          <div className="text-center my-4">
+                            <h2 className="fw-bold text-primary">
+                              Selected Product
+                            </h2>
+                          </div>
+                        )}
                         {/* table for selected product */}
-                        <div className="table-responsive no-pagination">
-                          <table className="table datanew">
-                            <thead>
-                              <tr>
-                                <th>Product</th>
-                                <th className="text-center">Qty</th>
-                                <th className="text-center">Purchase Price</th>
-                                <th className="text-center">Discount</th>
-                                <th className="text-center">Tax</th>
-                                <th className="text-center">Tax Amount</th>
-                                <th className="text-center">Item Code</th>
-                                <th className="text-center">Total Price</th>
-                                <th className="text-center">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {selectedProduct?.map((product, index) => (
-                                <tr key={index}>
-                                  <td>{product.productName}</td>
-                                  <td className="text-center">
-                                    <input
-                                      type="number"
-                                      min="1"
-                                      value={product.quantity}
-                                      onChange={(e) =>
-                                        handleQuantityChange(
-                                          product._id,
-                                          Number(e.target.value)
-                                        )
-                                      }
-                                      className="form-control text-center"
-                                      style={{
-                                        maxWidth: "80px",
-                                        margin: "0 auto",
-                                      }}
-                                    />
-                                  </td>
-                                  <td className="text-center">
-                                    {product.parchacePrice}
-                                  </td>
-                                  <td className="text-center">
-                                    {product.discountAmount}
-                                  </td>
-                                  <td className="text-center">
-                                    {product.taxType}
-                                  </td>
-                                  <td className="text-center">
-                                    {product.taxAmount}
-                                  </td>
-                                  <td className="text-center">
-                                    {product.itemCode}
-                                  </td>
-                                  <td className="text-center">
-                                    {product.price}
-                                  </td>
-                                  <td
-                                    className="text-center"
-                                    onClick={() => handleDeleteProduct(product)}
-                                  >
-                                    <ImageWithBasePath
-                                      src="assets/img/icons/delete.svg"
-                                      alt="img"
-                                    />
-                                  </td>
+                        {selectedProduct?.length > 0 && (
+                          <div className="table-responsive no-pagination">
+                            <table className="table datanew">
+                              <thead>
+                                <tr>
+                                  <th>Product</th>
+                                  <th className="text-center">Qty</th>
+                                  <th className="text-center">
+                                    Purchase Price
+                                  </th>
+                                  <th className="text-center">Discount</th>
+                                  <th className="text-center">Tax</th>
+                                  <th className="text-center">Tax Amount</th>
+                                  <th className="text-center">Item Code</th>
+                                  <th className="text-center">Total Price</th>
+                                  <th className="text-center">Action</th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
+                              </thead>
+                              <tbody>
+                                {selectedProduct?.map((product, index) => (
+                                  <tr key={index}>
+                                    <td>{product.productName}</td>
+                                    <td className="text-center">
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={product.quantity}
+                                        onChange={(e) =>
+                                          handleQuantityChange(
+                                            product._id,
+                                            Number(e.target.value)
+                                          )
+                                        }
+                                        className="form-control text-center"
+                                        style={{
+                                          maxWidth: "80px",
+                                          margin: "0 auto",
+                                        }}
+                                      />
+                                    </td>
+                                    <td className="text-center">
+                                      {product.parchacePrice}
+                                    </td>
+                                    <td className="text-center">
+                                      {product.discountAmount}
+                                    </td>
+                                    <td className="text-center">
+                                      {product.taxType}
+                                    </td>
+                                    <td className="text-center">
+                                      {product.taxAmount}
+                                    </td>
+                                    <td className="text-center">
+                                      {product.itemCode}
+                                    </td>
+                                    <td className="text-center">
+                                      {product.price}
+                                    </td>
+                                    <td
+                                      className="text-center"
+                                      onClick={() =>
+                                        handleDeleteProduct(product)
+                                      }
+                                    >
+                                      <ImageWithBasePath
+                                        src="assets/img/icons/delete.svg"
+                                        alt="img"
+                                      />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                         {/* table end */}
                         <div className="row">
                           <div className="col-lg-6 ms-auto">

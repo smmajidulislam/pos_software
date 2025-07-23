@@ -16,7 +16,7 @@ export const productApi = createApi({
         const params = new URLSearchParams();
         if (categoryId) params.append("categoryId", categoryId);
         if (pos) params.append("pos", pos);
-        if (search !== "" || !search) params.append("search", search);
+        if (search) params.append("search", search);
         return `/product?${params.toString()}`;
       },
       providesTags: ["Product"],
