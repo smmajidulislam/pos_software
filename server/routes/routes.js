@@ -53,6 +53,14 @@ const {
   deleteSupplier,
   getSuppliers,
 } = require("../controller/supplier.controller");
+const {
+  createUser,
+  getUserById,
+  getUsers,
+  updateUser,
+  deleteUser,
+} = require("../controller/user.controller");
+const { createOrder } = require("../controller/order.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -103,5 +111,13 @@ router.get("/supllier", getSuppliers);
 router.get("/supllier/:id", getSupplierById);
 router.put("/supllier/:id", updateSupplier);
 router.delete("/supllier/:id", deleteSupplier);
+// users route
+router.post("/user", createUser);
+router.get("/user", getUsers);
+router.get("/user/:id", getUserById);
+router.put("/user/:id", updateUser);
+router.delete("/user/:id", deleteUser);
+// order routes
+router.post("/order", createOrder);
 
 module.exports = router;

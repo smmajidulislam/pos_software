@@ -123,21 +123,24 @@ exports.createProduct = async (req, res) => {
 };
 exports.getProducts = async (req, res) => {
   try {
-    const { categoryId, pos } = req.query;
-    if (categoryId === "allCategory") {
-      const data = await Product.find({ store: pos });
-      return res.status(200).json({ message: "success", data });
-    } else {
-      const data = await Product.find({
-        $or: [
-          { category: categoryId },
-          { subCategory: categoryId },
-          { subSubCategory: categoryId },
-        ],
-        store: pos,
-      });
-      return res.status(200).json({ message: "success", data });
+    const { categoryId, pos, search } = req.query;
+    const baseQuery = {
+      store: pos,
+    };
+    if (categoryId !== "allCategory") {
+      baseQuery.$or = [
+        { category: categoryId },
+        { subCategory: categoryId },
+        { subSubCategory: categoryId },
+      ];
     }
+    if (search) {
+      baseQuery.productName = { $regex: search, $options: "i" };
+    }
+
+    const data = await Product.find(baseQuery);
+
+    return res.status(200).json({ message: "success", data });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: error.message || "Server error" });

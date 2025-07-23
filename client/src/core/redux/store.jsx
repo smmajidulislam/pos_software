@@ -9,6 +9,8 @@ import { wareHouseApi } from "./api/wareHouseApi/wareHouseApi";
 import { variantApi } from "./api/variantApi/variantApi";
 import { productApi } from "./api/productapi/productApi";
 import { supplierApi } from "./api/supplierApi/supplierApi";
+import { userApi } from "./api/userApi/userApi";
+import { orderApi } from "./api/orderApi/orderApi";
 import orderReducer from "./actions/orderAction";
 const store = configureStore({
   reducer: {
@@ -23,6 +25,8 @@ const store = configureStore({
     [variantApi.reducerPath]: variantApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
     [supplierApi.reducerPath]: supplierApi.reducer,
+    [userApi.reducerPath]: userApi.reducer,
+    [orderApi.reducerPath]: orderApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -34,7 +38,9 @@ const store = configureStore({
       wareHouseApi.middleware,
       variantApi.middleware,
       productApi.middleware,
-      supplierApi.middleware
+      supplierApi.middleware,
+      userApi.middleware,
+      orderApi.middleware
     ),
 });
 
