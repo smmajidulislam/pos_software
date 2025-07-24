@@ -11,11 +11,11 @@ import { productApi } from "./api/productapi/productApi";
 import { supplierApi } from "./api/supplierApi/supplierApi";
 import { userApi } from "./api/userApi/userApi";
 import { orderApi } from "./api/orderApi/orderApi";
-import orderReducer from "./actions/orderAction";
+import posCartReducer from "./actions/orderAction";
 const store = configureStore({
   reducer: {
     ...rootReducer,
-    orderMangement: orderReducer,
+    posCart: posCartReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
     [posApi.reducerPath]: posApi.reducer,
     [categoryApi.reducerPath]: categoryApi.reducer,

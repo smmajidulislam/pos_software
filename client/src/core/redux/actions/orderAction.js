@@ -1,55 +1,44 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  products: [], // product list
-  taxRate: 5, // in percent
-  shipping: 15, // flat rate
-  discountType: "percent", // or "cash"
-  discountValue: 10, // 10% or 500 taka
+  products: [], // array of { productInfo, quantity }
+  gstRate: 0.05, // default 5%
+  shippingCharge: 0,
+  discountValue: 0,
+  discountType: "percent", // 'percent' or 'cash'
 };
-
-const orderSlice = createSlice({
-  name: "orderAction",
+const posCartSlice = createSlice({
+  name: "posCart",
   initialState,
   reducers: {
     addProduct: (state, action) => {
-      const product = action.payload;
-      const existing = state.products.find((item) => item._id === product._id);
-
+      const existing = state.products.find((p) => p._id === action.payload._id);
       if (existing) {
-        existing.quantity += 1;
+        return;
       } else {
-        state.products.push({ ...product, quantity: 1 });
+        state.products.push({ ...action.payload, quantity: 1 });
       }
     },
 
     removeProduct: (state, action) => {
-      const productId = action.payload;
-      state.products = state.products.filter((item) => item._id !== productId);
+      state.products = state.products.filter((p) => p._id !== action.payload);
     },
 
-    updateQuantity: (state, action) => {
-      const { _id, quantity } = action.payload;
-      const item = state.products.find((p) => p._id === _id);
-      if (item) item.quantity = quantity;
-    },
-
-    clearProducts: (state) => {
+    clearCart: (state) => {
       state.products = [];
     },
 
-    setTaxRate: (state, action) => {
-      state.taxRate = action.payload;
+    setGstRate: (state, action) => {
+      state.gstRate = action.payload;
     },
 
-    setShipping: (state, action) => {
-      state.shipping = action.payload;
+    setShippingCharge: (state, action) => {
+      state.shippingCharge = action.payload;
     },
 
     setDiscount: (state, action) => {
-      const { type, value } = action.payload;
-      state.discountType = type;
-      state.discountValue = value;
+      state.discountValue = action.payload.value;
+      state.discountType = action.payload.type;
     },
   },
 });
@@ -57,41 +46,12 @@ const orderSlice = createSlice({
 export const {
   addProduct,
   removeProduct,
-  updateQuantity,
-  clearProducts,
-  setTaxRate,
-  setShipping,
+  incrementQty,
+  decrementQty,
+  clearCart,
+  setGstRate,
+  setShippingCharge,
   setDiscount,
-} = orderSlice.actions;
+} = posCartSlice.actions;
 
-export default orderSlice.reducer;
-
-// Selector to calculate totals
-export const selectOrderSummary = (state) => {
-  const { products, taxRate, shipping, discountType, discountValue } =
-    state.order;
-
-  const subTotal = products.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-
-  const tax = (taxRate / 100) * subTotal;
-
-  let discount = 0;
-  if (discountType === "percent") {
-    discount = (discountValue / 100) * subTotal;
-  } else if (discountType === "cash") {
-    discount = discountValue;
-  }
-
-  const total = subTotal + tax + shipping - discount;
-
-  return {
-    subTotal,
-    tax,
-    shipping,
-    discount,
-    total,
-  };
-};
+export default posCartSlice.reducer;

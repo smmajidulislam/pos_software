@@ -31,6 +31,7 @@ const SalesList = () => {
   const data = useSelector((state) => state.toggle_header);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const grandTotal = selectedProduct.reduce(
     (acc, curr) => acc + Number(curr.price),
     0
@@ -109,7 +110,7 @@ const SalesList = () => {
       skip: !pos?._id,
     }
   );
-  console.log(orderList);
+  console.log(selectedOrder);
 
   const handleQuantityChange = (productId, newQty) => {
     const originalProduct = productsList?.data.find(
@@ -224,13 +225,6 @@ const SalesList = () => {
 
     const orderDiscount = totalDiscount || 0;
     const orderTax = totalOrderTax || 0;
-
-    const productsTotal = selectedProduct.reduce(
-      (acc, curr) => acc + Number(curr.price),
-      0
-    );
-
-    const grandTotal = productsTotal + shippingCost + orderTax - orderDiscount;
 
     const payload = {
       customerId: selectedCustomer?.value,
@@ -588,7 +582,7 @@ const SalesList = () => {
               <div className="table-responsive">
                 <table className="table  datanew">
                   <thead>
-                    <tr>
+                    <tr className="text-center">
                       <th>Customer Name</th>
                       <th>Reference</th>
                       <th>Date</th>
@@ -650,6 +644,7 @@ const SalesList = () => {
                                 className="dropdown-item"
                                 data-bs-toggle="modal"
                                 data-bs-target="#sales-details-new"
+                                onClick={() => setSelectedOrder(item)}
                               >
                                 <i data-feather="eye" className="info-img" />
                                 Sale Detail
@@ -661,6 +656,7 @@ const SalesList = () => {
                                 className="dropdown-item"
                                 data-bs-toggle="modal"
                                 data-bs-target="#edit-sales-new"
+                                onClick={() => setSelectedOrder(item)}
                               >
                                 <i data-feather="edit" className="info-img" />
                                 Edit Sale
@@ -672,6 +668,7 @@ const SalesList = () => {
                                 className="dropdown-item"
                                 data-bs-toggle="modal"
                                 data-bs-target="#showpayment"
+                                onClick={() => setSelectedOrder(item)}
                               >
                                 <i
                                   data-feather="dollar-sign"
@@ -686,6 +683,7 @@ const SalesList = () => {
                                 className="dropdown-item"
                                 data-bs-toggle="modal"
                                 data-bs-target="#createpayment"
+                                onClick={() => setSelectedOrder(item)}
                               >
                                 <i
                                   data-feather="plus-circle"
@@ -695,7 +693,11 @@ const SalesList = () => {
                               </Link>
                             </li>
                             <li>
-                              <Link to="#" className="dropdown-item">
+                              <Link
+                                to="#"
+                                className="dropdown-item"
+                                onClick={() => setSelectedOrder(item)}
+                              >
                                 <i
                                   data-feather="download"
                                   className="info-img"
@@ -707,6 +709,7 @@ const SalesList = () => {
                               <Link
                                 to="#"
                                 className="dropdown-item confirm-text mb-0"
+                                onClick={() => setSelectedOrder(item)}
                               >
                                 <i
                                   data-feather="trash-2"

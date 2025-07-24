@@ -41,14 +41,15 @@ const orderSchema = new mongoose.Schema(
     grandTotal: Number,
     status: {
       type: String,
-      enum: ["Pending", "Completed", "Cancelled"],
+      enum: ["Pending", "Completed", "Cancelled", "hold", "void"],
       default: "Pending",
     },
-    posId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Pos",
-      required: true,
+    paymentMethod: {
+      type: String,
+      enum: ["cash", "card", "scan"],
+      default: "cash",
     },
+
     due: Number,
     payment: Number,
   },

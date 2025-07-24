@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Box } from "react-feather";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
@@ -10,7 +10,6 @@ import {
 import {
   Check,
   CheckCircle,
-  Edit,
   MoreVertical,
   Trash2,
   UserPlus,
@@ -24,18 +23,32 @@ import Swal from "sweetalert2";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-
+import { useDispatch } from "react-redux";
+import {
+  addProduct,
+  removeProduct,
+  clearCart,
+} from "../../core/redux/actions/orderAction";
+import { useSelector } from "react-redux";
 import { useGetCategoriesQuery } from "../../core/redux/api/categoryApi/categoryApi";
 import { usePos } from "../../hooks/PosProvider";
 import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
+import { useCreateOrderMutation } from "../../core/redux/api/orderApi/orderApi";
 
 const Pos = () => {
   // state mangement
   const [mainCategoryCount, setMainCategoryCount] = useState(0);
   const [mainCategoryListShowing, setMainCategoryListShowing] = useState([]);
   const [catchCategoryId, setCatchCategoryId] = useState("allCategory");
+  const [quantity, setQuantity] = useState(1);
+  const [paidPayment, setPaidPayment] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("");
+
+  const dispatch = useDispatch();
+  const [createOrder] = useCreateOrderMutation();
   // data management
   const { pos } = usePos();
+  const reduxStateOrders = useSelector((state) => state.posCart);
   const { data: categoriesList } = useGetCategoriesQuery(
     {
       pos: pos?._id,
@@ -50,7 +63,7 @@ const Pos = () => {
     { skip: !pos?._id }
   );
   const handleProductOrder = (id) => {
-    console.log(id);
+    dispatch(addProduct(id));
   };
   useEffect(() => {
     if (categoriesList?.data) {
@@ -58,42 +71,44 @@ const Pos = () => {
       setMainCategoryListShowing(categoriesList?.data);
     }
   }, [categoriesList]);
+  const orderTax = useMemo(() => {
+    return reduxStateOrders?.products.reduce(
+      (acc, curr) => acc + curr.taxValue * quantity,
+      0
+    );
+  }, [reduxStateOrders?.products, quantity]);
+  const discountAmount = useMemo(() => {
+    return reduxStateOrders?.products.reduce(
+      (acc, curr) => acc + curr.discountValue * quantity,
+      0
+    );
+  }, [reduxStateOrders?.products, quantity]);
+  const shippingValue = useMemo(() => {
+    return reduxStateOrders?.products.reduce(
+      (acc, curr) => acc + curr?.shippingValue * quantity,
+      0
+    );
+  }, [reduxStateOrders?.products, quantity]);
+  const subTotal = useMemo(() => {
+    return reduxStateOrders?.products.reduce(
+      (acc, curr) => acc + curr?.price * quantity,
+      0
+    );
+  }, [reduxStateOrders?.products, quantity]);
+  const subTotalWithOutDiscount = useMemo(() => {
+    const total =
+      Number(subTotal) + Number(orderTax) + (Number(shippingValue) || 0);
+    return total;
+  }, [orderTax, shippingValue, subTotal]);
+  const grandTotal = useMemo(() => {
+    return subTotalWithOutDiscount - discountAmount;
+  }, [subTotalWithOutDiscount, discountAmount]);
+  const deuPayment = useMemo(() => {
+    return grandTotal - paidPayment;
+  }, [grandTotal, paidPayment]);
+
   // data management end
-  const customers = [
-    { value: "walkInCustomer", label: "Walk in Customer" },
-    { value: "john", label: "John" },
-    { value: "smith", label: "Smith" },
-    { value: "ana", label: "Ana" },
-    { value: "elza", label: "Elza" },
-  ];
-  const products = [
-    { value: "walkInCustomer", label: "Walk in Customer" },
-    { value: "john", label: "John" },
-    { value: "smith", label: "Smith" },
-    { value: "ana", label: "Ana" },
-    { value: "elza", label: "Elza" },
-  ];
-  const gst = [
-    { value: "5", label: "GST 5%" },
-    { value: "10", label: "GST 10%" },
-    { value: "15", label: "GST 15%" },
-    { value: "20", label: "GST 20%" },
-    { value: "25", label: "GST 25%" },
-    { value: "30", label: "GST 30%" },
-  ];
-  const shipping = [
-    { value: "15", label: "15" },
-    { value: "20", label: "20" },
-    { value: "25", label: "25" },
-    { value: "30", label: "30" },
-  ];
-  const discount = [
-    { value: "10", label: "10%" },
-    { value: "15", label: "15%" },
-    { value: "20", label: "20%" },
-    { value: "25", label: "25%" },
-    { value: "30", label: "30%" },
-  ];
+  const customers = [{ value: "walkInCustomer", label: "Walk in Customer" }];
   const tax = [
     { value: "exclusive", label: "Exclusive" },
     { value: "inclusive", label: "Inclusive" },
@@ -106,48 +121,57 @@ const Pos = () => {
     { value: "kilogram", label: "Kilogram" },
     { value: "grams", label: "Grams" },
   ];
-  const [quantity, setQuantity] = useState(4);
 
-  const handleDecrement = () => {
-    if (quantity > 1) {
+  const handleDecrement = (product) => {
+    if (
+      (product.stock >= 1 && quantity < product.stock && quantity > 1) ||
+      (product.stock >= 1 && quantity <= product.stock && quantity > 1)
+    ) {
       setQuantity(quantity - 1);
     }
   };
-  const handleIncrement = () => {
-    setQuantity(quantity + 1);
-  };
-  const [quantity1, setQuantity1] = useState(3);
-
-  const handleDecrement1 = () => {
-    if (quantity1 > 1) {
-      setQuantity1(quantity1 - 1);
+  const handleIncrement = (product) => {
+    if (product.stock >= 1 && quantity < product.stock) {
+      setQuantity(quantity + 1);
     }
   };
+  const handleOrderSubmit = async (statusType) => {
+    try {
+      const orderData = {
+        customerId: "6873d34cb7e0b2a59b96463c", // বা যেটা সিলেক্ট হবে
+        supplierId: "687f8e6fc34e0a634df4bb32", // ধরছি supplier holo pos user
+        posId: pos?._id,
+        status: statusType, // "hold" | "void" | "Completed"
+        paymentMethod: paymentMethod?.toLocaleLowerCase || "cash",
+        products: reduxStateOrders?.products?.map((p) => ({
+          productId: p._id,
+          productName: p.productName,
+          itemCode: p.itemCode,
+          quantity: p.quantity || 1,
+          rate: p.price,
+          taxAmount: p.taxValue,
+          discountAmount: p.discountValue,
+          totalPrice:
+            p.price + p.taxValue + (p.shippingValue || 0) - p.discountValue,
+        })),
+        orderTax,
+        shipping: shippingValue,
+        discount: discountAmount,
+        totalDiscount: discountAmount,
+        totalTax: orderTax,
+        grandTotal,
+        payment: paidPayment,
+        due: deuPayment,
+      };
 
-  const handleIncrement1 = () => {
-    setQuantity1(quantity1 + 1);
-  };
-  const [quantity2, setQuantity2] = useState(3);
-
-  const handleDecrement2 = () => {
-    if (quantity2 > 1) {
-      setQuantity2(quantity2 - 1);
+      const res = await createOrder(orderData).unwrap();
+      console.log(res);
+      console.log("Order saved:", res?.data);
+      Swal.fire("Success", "Order submitted as " + statusType, "success");
+    } catch (err) {
+      Swal.fire("Error", "Failed to create order", "error");
+      console.error(err);
     }
-  };
-
-  const handleIncrement2 = () => {
-    setQuantity2(quantity2 + 1);
-  };
-  const [quantity3, setQuantity3] = useState(1);
-
-  const handleDecrement3 = () => {
-    if (quantity3 > 1) {
-      setQuantity3(quantity3 - 1);
-    }
-  };
-
-  const handleIncrement3 = () => {
-    setQuantity3(quantity3 + 1);
   };
 
   const renderTooltip = (props) => (
@@ -214,7 +238,7 @@ const Pos = () => {
 
   const MySwal = withReactContent(Swal);
 
-  const showConfirmationAlert = () => {
+  const showConfirmationAlert = (id) => {
     MySwal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -225,6 +249,7 @@ const Pos = () => {
       cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
+        dispatch(removeProduct(id));
         MySwal.fire({
           title: "Deleted!",
           text: "Your file has been deleted.",
@@ -376,11 +401,11 @@ const Pos = () => {
             <div className="col-md-12 col-lg-4 ps-0">
               <aside className="product-order-list">
                 <div className="head d-flex align-items-center justify-content-between w-100">
-                  <div className="">
+                  <div>
                     <h5>Order List</h5>
                     <span>Transaction ID : #65565</span>
                   </div>
-                  <div className="">
+                  <div>
                     <Link className="confirm-text" to="#">
                       <Trash2 className="feather-16 text-danger me-1" />
                     </Link>
@@ -408,18 +433,12 @@ const Pos = () => {
                       <UserPlus className="feather-16" />
                     </Link>
                   </div>
-                  <div className="input-block">
-                    <Select
-                      options={products}
-                      className="select"
-                      placeholder="Select an option"
-                    />
-                  </div>
                 </div>
+                {/* ====================================================== */}
                 <div className="product-added block-section">
                   <div className="head-text d-flex align-items-center justify-content-between">
                     <h6 className="d-flex align-items-center mb-0">
-                      Product Added<span className="count">2</span>
+                      Product Added
                     </h6>
                     <Link
                       to="#"
@@ -432,305 +451,86 @@ const Pos = () => {
                     </Link>
                   </div>
                   <div className="product-wrap">
-                    <div className="product-list d-flex align-items-center justify-content-between">
+                    {reduxStateOrders?.products?.map((item, index) => (
                       <div
-                        className="d-flex align-items-center product-info"
-                        data-bs-toggle="modal"
-                        data-bs-target="#products"
+                        key={index}
+                        className="product-list d-flex align-items-center justify-content-between"
                       >
-                        <Link to="#" className="img-bg">
-                          <ImageWithBasePath
-                            src="assets/img/products/pos-product-16.png"
-                            alt="Products"
+                        <div
+                          className="d-flex align-items-center product-info"
+                          data-bs-toggle="modal"
+                          data-bs-target="#products"
+                        >
+                          <Link to="#" className="img-bg">
+                            <ImageWithBasePath
+                              src={item?.images[0]?.url}
+                              isBase={true}
+                              alt="Products"
+                            />
+                          </Link>
+                          <div className="info">
+                            <span>
+                              {item?.productName
+                                ?.split(" ")
+                                .slice(0, 2)
+                                .join(" ")}
+                            </span>
+                            <h6>
+                              <Link to="#">{item.slug}</Link>
+                            </h6>
+                            <p>{"৳ " + item.price}</p>
+                          </div>
+                        </div>
+                        <div className="qty-item text-center">
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-minus">Minus</Tooltip>
+                            }
+                          >
+                            <Link
+                              to="#"
+                              className="dec d-flex justify-content-center align-items-center"
+                              onClick={() => handleDecrement(item)}
+                            >
+                              <MinusCircle className="feather-14" />
+                            </Link>
+                          </OverlayTrigger>
+
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            name="qty"
+                            value={quantity}
+                            readOnly
                           />
-                        </Link>
-                        <div className="info">
-                          <span>PT0005</span>
-                          <h6>
-                            <Link to="#">Red Nike Laser</Link>
-                          </h6>
-                          <p>$2000</p>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip id="tooltip-plus">Plus</Tooltip>}
+                          >
+                            <Link
+                              to="#"
+                              onClick={() => handleIncrement(item)}
+                              className="inc d-flex justify-content-center align-items-center"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="plus"
+                            >
+                              <PlusCircle className="feather-14" />
+                            </Link>
+                          </OverlayTrigger>
+                        </div>
+                        <div className="d-flex align-items-center action">
+                          <Link
+                            onClick={() => showConfirmationAlert(item._id)}
+                            className="btn-icon delete-icon confirm-text"
+                            to="#"
+                          >
+                            <Trash2 className="feather-14" />
+                          </Link>
                         </div>
                       </div>
-                      <div className="qty-item text-center">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-minus">Minus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="dec d-flex justify-content-center align-items-center"
-                            onClick={handleDecrement}
-                          >
-                            <MinusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          name="qty"
-                          value={quantity}
-                          readOnly
-                        />
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-plus">Plus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            onClick={handleIncrement}
-                            className="inc d-flex justify-content-center align-items-center"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="plus"
-                          >
-                            <PlusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-                      </div>
-                      <div className="d-flex align-items-center action">
-                        <Link
-                          className="btn-icon edit-icon me-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-product"
-                        >
-                          <Edit className="feather-14" />
-                        </Link>
-                        <Link
-                          onClick={showConfirmationAlert}
-                          className="btn-icon delete-icon confirm-text"
-                          to="#"
-                        >
-                          <Trash2 className="feather-14" />
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="product-list d-flex align-items-center justify-content-between">
-                      <div
-                        className="d-flex align-items-center product-info"
-                        data-bs-toggle="modal"
-                        data-bs-target="#products"
-                      >
-                        <Link to="#" className="img-bg">
-                          <ImageWithBasePath
-                            src="assets/img/products/pos-product-17.png"
-                            alt="Products"
-                          />
-                        </Link>
-                        <div className="info">
-                          <span>PT0235</span>
-                          <h6>
-                            <Link to="#">Iphone 14</Link>
-                          </h6>
-                          <p>$3000</p>
-                        </div>
-                      </div>
-                      <div className="qty-item text-center">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-minus">Minus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="dec d-flex justify-content-center align-items-center"
-                            onClick={handleDecrement1}
-                          >
-                            <MinusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          name="qty"
-                          value={quantity1}
-                          readOnly
-                        />
-
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-plus">Plus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="inc d-flex justify-content-center align-items-center"
-                            onClick={handleIncrement1}
-                          >
-                            <PlusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-                      </div>
-                      <div className="d-flex align-items-center action">
-                        <Link
-                          className="btn-icon edit-icon me-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-product"
-                        >
-                          <Edit className="feather-14" />
-                        </Link>
-                        <Link
-                          onClick={showConfirmationAlert}
-                          className="btn-icon delete-icon confirm-text"
-                          to="#"
-                        >
-                          <Trash2 className="feather-14" />
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="product-list d-flex align-items-center justify-content-between">
-                      <div
-                        className="d-flex align-items-center product-info"
-                        data-bs-toggle="modal"
-                        data-bs-target="#products"
-                      >
-                        <Link to="#" className="img-bg">
-                          <ImageWithBasePath
-                            src="assets/img/products/pos-product-16.png"
-                            alt="Products"
-                          />
-                        </Link>
-                        <div className="info">
-                          <span>PT0005</span>
-                          <h6>
-                            <Link to="#">Red Nike Laser</Link>
-                          </h6>
-                          <p>$2000</p>
-                        </div>
-                      </div>
-
-                      <div className="qty-item text-center">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-minus">Minus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="dec d-flex justify-content-center align-items-center"
-                            onClick={handleDecrement2}
-                          >
-                            <MinusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          name="qty"
-                          value={quantity2}
-                          readOnly
-                        />
-
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-plus">Plus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="inc d-flex justify-content-center align-items-center"
-                            onClick={handleIncrement2}
-                          >
-                            <PlusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-                      </div>
-
-                      <div className="d-flex align-items-center action">
-                        <Link
-                          className="btn-icon edit-icon me-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-product"
-                        >
-                          <Edit className="feather-14" />
-                        </Link>
-                        <Link
-                          className="btn-icon delete-icon confirm-text"
-                          to="#"
-                          onClick={showConfirmationAlert}
-                        >
-                          <Trash2 className="feather-14" />
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="product-list d-flex align-items-center justify-content-between">
-                      <div
-                        className="d-flex align-items-center product-info"
-                        data-bs-toggle="modal"
-                        data-bs-target="#products"
-                      >
-                        <Link to="#" className="img-bg">
-                          <ImageWithBasePath
-                            src="assets/img/products/pos-product-17.png"
-                            alt="Products"
-                          />
-                        </Link>
-                        <div className="info">
-                          <span>PT0005</span>
-                          <h6>
-                            <Link to="#">Red Nike Laser</Link>
-                          </h6>
-                          <p>$2000</p>
-                        </div>
-                      </div>
-
-                      <div className="qty-item text-center">
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-minus">Minus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="dec d-flex justify-content-center align-items-center"
-                            onClick={handleDecrement3}
-                          >
-                            <MinusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          name="qty"
-                          value={quantity3}
-                          readOnly
-                        />
-
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="tooltip-plus">Plus</Tooltip>}
-                        >
-                          <Link
-                            to="#"
-                            className="inc d-flex justify-content-center align-items-center"
-                            onClick={handleIncrement3}
-                          >
-                            <PlusCircle className="feather-14" />
-                          </Link>
-                        </OverlayTrigger>
-                      </div>
-
-                      <div className="d-flex align-items-center action">
-                        <Link
-                          className="btn-icon edit-icon me-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-product"
-                        >
-                          <i data-feather="edit" className="feather-14" />
-                          <Edit className="feather-14" />
-                        </Link>
-                        <Link
-                          className="btn-icon delete-icon confirm-text"
-                          to="#"
-                          onClick={showConfirmationAlert}
-                        >
-                          <Trash2 className="feather-14" />
-                        </Link>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 <div className="block-section">
@@ -739,30 +539,36 @@ const Pos = () => {
                       <div className="col-12 col-sm-4">
                         <div className="input-block">
                           <label>Order Tax</label>
-                          <Select
-                            className="select"
-                            options={gst}
-                            placeholder="GST 5%"
+                          <input
+                            type="number"
+                            name="orderTax"
+                            className="form-control text-center"
+                            value={orderTax}
+                            readOnly
                           />
                         </div>
                       </div>
                       <div className="col-12 col-sm-4">
                         <div className="input-block">
                           <label>Shipping</label>
-                          <Select
-                            className="select"
-                            options={shipping}
-                            placeholder="15"
+                          <input
+                            type="number"
+                            name="shipping"
+                            className="form-control text-center"
+                            value={shippingValue || 0}
+                            readOnly
                           />
                         </div>
                       </div>
                       <div className="col-12 col-sm-4">
                         <div className="input-block">
                           <label>Discount</label>
-                          <Select
-                            className="select"
-                            options={discount}
-                            placeholder="10%"
+                          <input
+                            type="number"
+                            name="discount"
+                            className="form-control text-center"
+                            value={discountAmount}
+                            readOnly
                           />
                         </div>
                       </div>
@@ -773,27 +579,53 @@ const Pos = () => {
                       <tbody>
                         <tr>
                           <td>Sub Total</td>
-                          <td className="text-end">$60,454</td>
+                          <td className="text-end">{subTotal}</td>
                         </tr>
                         <tr>
-                          <td>Tax (GST 5%)</td>
-                          <td className="text-end">$40.21</td>
+                          <td>Tax </td>
+                          <td className="text-end">{orderTax}</td>
                         </tr>
                         <tr>
                           <td>Shipping</td>
-                          <td className="text-end">$40.21</td>
+                          <td className="text-end">{shippingValue || 0}</td>
                         </tr>
                         <tr>
                           <td>Sub Total</td>
-                          <td className="text-end">$60,454</td>
+                          <td className="text-end">
+                            {subTotalWithOutDiscount}
+                          </td>
                         </tr>
                         <tr>
-                          <td className="danger">Discount (10%)</td>
-                          <td className="danger text-end">$15.21</td>
+                          <td className="danger">Discount</td>
+                          <td className="danger text-end">{discountAmount}</td>
                         </tr>
                         <tr>
                           <td>Total</td>
-                          <td className="text-end">$64,024.5</td>
+                          <td className="text-end">{grandTotal}</td>
+                        </tr>
+                        <tr>
+                          <td>Payment</td>
+                          <td className="text-end">
+                            <>
+                              <style>{`
+                              input[type=number]::-webkit-inner-spin-button,
+                              input[type=number]::-webkit-outer-spin-button {-webkit-appearance: none;
+                              margin: 0;}
+                              input[type=number] {-moz-appearance: textfield;}`}</style>
+
+                              <input
+                                type="number"
+                                name="paidPayment"
+                                className="form-control text-center"
+                                value={paidPayment}
+                                onChange={(e) => setPaidPayment(e.target.value)}
+                              />
+                            </>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Deu</td>
+                          <td className="text-end">{deuPayment}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -803,7 +635,10 @@ const Pos = () => {
                   <h6>Payment Method</h6>
                   <div className="row d-flex align-items-center justify-content-center methods">
                     <div className="col-md-6 col-lg-4 item">
-                      <div className="default-cover">
+                      <div
+                        className="default-cover"
+                        onClick={() => setPaymentMethod("cash")}
+                      >
                         <Link to="#">
                           <ImageWithBasePath
                             src="assets/img/icons/cash-pay.svg"
@@ -814,7 +649,10 @@ const Pos = () => {
                       </div>
                     </div>
                     <div className="col-md-6 col-lg-4 item">
-                      <div className="default-cover">
+                      <div
+                        className="default-cover"
+                        onClick={() => setPaymentMethod("card")}
+                      >
                         <Link to="#">
                           <ImageWithBasePath
                             src="assets/img/icons/credit-card.svg"
@@ -825,7 +663,10 @@ const Pos = () => {
                       </div>
                     </div>
                     <div className="col-md-6 col-lg-4 item">
-                      <div className="default-cover">
+                      <div
+                        className="default-cover"
+                        onClick={() => setPaymentMethod("scan")}
+                      >
                         <Link to="#">
                           <ImageWithBasePath
                             src="assets/img/icons/qr-scan.svg"
@@ -839,22 +680,28 @@ const Pos = () => {
                 </div>
                 <div className="d-grid btn-block">
                   <Link className="btn btn-secondary" to="#">
-                    Grand Total : $64,024.5
+                    Grand Total : {"৳ " + grandTotal}
                   </Link>
                 </div>
+
                 <div className="btn-row d-sm-flex align-items-center justify-content-between">
                   <Link
                     to="#"
                     className="btn btn-info btn-icon flex-fill"
                     data-bs-toggle="modal"
                     data-bs-target="#hold-order"
+                    onClick={() => handleOrderSubmit("hold")}
                   >
                     <span className="me-1 d-flex align-items-center">
                       <i data-feather="pause" className="feather-16" />
                     </span>
                     Hold
                   </Link>
-                  <Link to="#" className="btn btn-danger btn-icon flex-fill">
+                  <Link
+                    to="#"
+                    className="btn btn-danger btn-icon flex-fill"
+                    onClick={() => handleOrderSubmit("void")}
+                  >
                     <span className="me-1 d-flex align-items-center">
                       <i data-feather="trash-2" className="feather-16" />
                     </span>
@@ -865,6 +712,7 @@ const Pos = () => {
                     className="btn btn-success btn-icon flex-fill"
                     data-bs-toggle="modal"
                     data-bs-target="#payment-completed"
+                    onClick={() => handleOrderSubmit("Completed")}
                   >
                     <span className="me-1 d-flex align-items-center">
                       <i data-feather="credit-card" className="feather-16" />
@@ -906,7 +754,15 @@ const Pos = () => {
                   >
                     Print Receipt
                   </button>
-                  <Link to="#" className="btn btn-secondary flex-fill">
+                  <Link
+                    to="#"
+                    className="btn btn-secondary flex-fill"
+                    data-bs-dismiss="modal"
+                    onClick={() => {
+                      setPaidPayment(0);
+                      dispatch(clearCart());
+                    }}
+                  >
                     Next Order
                   </Link>
                 </div>
