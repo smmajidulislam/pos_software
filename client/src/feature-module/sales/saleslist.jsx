@@ -20,7 +20,10 @@ import { useGetSuppliersQuery } from "../../core/redux/api/supplierApi/supplierA
 import { usePos } from "../../hooks/PosProvider";
 import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
 import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
-import { useCreateOrderMutation } from "../../core/redux/api/orderApi/orderApi";
+import {
+  useCreateOrderMutation,
+  useGetOrdersQuery,
+} from "../../core/redux/api/orderApi/orderApi";
 import Swal from "sweetalert2";
 
 const SalesList = () => {
@@ -61,6 +64,23 @@ const SalesList = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [duePayment, setDuePayment] = useState(0);
   const [pay, setPay] = useState(0);
+  // ====================================================
+  const [searchDataForFIlter, setSearchDataForFIlter] = useState({
+    customer: null,
+    status: null,
+    reference: "",
+    paymentStatus: null,
+    search: "",
+    sort: null,
+  });
+
+  const handleSearchDataForFIlter = (field, value) => {
+    setSearchDataForFIlter((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  // ====================================================
 
   const { data: usersList, isLoading: usersLoading } = useGetUsersQuery({
     role: "customer",
@@ -75,6 +95,22 @@ const SalesList = () => {
     }
   );
   const [createOrder] = useCreateOrderMutation();
+  const { data: orderList } = useGetOrdersQuery(
+    {
+      customer: searchDataForFIlter?.customer?.value,
+      status: searchDataForFIlter?.status?.value,
+      reference: searchDataForFIlter?.reference,
+      paymentStatus: searchDataForFIlter?.paymentStatus?.value,
+      search: searchDataForFIlter?.search,
+      sort: searchDataForFIlter?.sort?.value,
+      posId: pos?._id,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+  console.log(orderList);
+
   const handleQuantityChange = (productId, newQty) => {
     const originalProduct = productsList?.data.find(
       (item) => item._id === productId
@@ -83,12 +119,26 @@ const SalesList = () => {
     if (!originalProduct) return;
 
     if (newQty < 1) {
-      alert("Quantity must be at least 1");
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Quantity",
+        text: "Quantity must be at least 1.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#00ff00",
+        timer: 1000,
+      });
       return;
     }
 
     if (newQty > originalProduct.stock) {
-      alert("Not enough stock available");
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Quantity",
+        text: "Quantity exceeds stock.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#00ff00",
+        timer: 1000,
+      });
       return;
     }
 
@@ -125,7 +175,14 @@ const SalesList = () => {
   const handleSelectedProduct = (product) => {
     const alreadySelected = selectedProduct.find((p) => p._id === product._id);
     if (alreadySelected) {
-      alert("Already added!");
+      Swal.fire({
+        icon: "error",
+        title: "Product already selected",
+        text: "You have already selected this product.",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#00ff00",
+        timer: 700,
+      });
       return;
     }
 
@@ -187,6 +244,7 @@ const SalesList = () => {
       grandTotal: grandTotal.toFixed(2),
       payment: payment.toFixed(2),
       due: due.toFixed(2),
+      posId: pos?._id,
       products: selectedProduct.map((product) => ({
         productId: product._id,
         productName: product.productName,
@@ -209,14 +267,21 @@ const SalesList = () => {
           confirmButtonText: "OK",
           timer: 1000,
         });
+        setSelectedProduct([]);
+        setSelectedSupplier(null);
+        setSelectedCustomer(null);
+        setSelectedStatus(null);
+        setSearch("");
+        setPay(0);
+        setDuePayment(0);
       }
     } catch (error) {
       Swal.fire({
         title: "Error!",
-        text: error.message,
+        text: " Customer suppier product blance fill up care fully !",
         icon: "error",
         confirmButtonText: "OK",
-        timer: 1000,
+        timer: 1200,
       });
     }
   };
@@ -237,25 +302,19 @@ const SalesList = () => {
       setCustomer(customerOptions);
     }
   }, [supplierList, supplierLoading, usersLoading, usersList]);
-  const customername = [
-    { value: "Choose Customer Name", label: "Choose Customer Name" },
-    { value: "Macbook pro", label: "Macbook pro" },
-    { value: "Orange", label: "Orange" },
-  ];
 
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
   const oldandlatestvalue = [
-    { value: "Sort by Date", label: "Sort by Date" },
-    { value: "07 09 23", label: "07 09 23" },
-    { value: "21 09 23", label: "21 09 23" },
+    { value: "latest", label: "Latest" },
+    { value: "oldest", label: "oldest" },
   ];
 
   const status = [
-    { value: "Choose Status", label: "Choose Status" },
-    { value: "Computers", label: "Computers" },
-    { value: "Fruits", label: "Fruits" },
+    { value: "Pending", label: "Pending" },
+    { value: "Completed", label: "Completed" },
+    { value: "Cancelled", label: "Cancelled" },
   ];
   const paymentstatus = [
     { value: "Choose Payment Status", label: "Choose Payment Status" },
@@ -386,6 +445,13 @@ const SalesList = () => {
                     <input
                       type="text"
                       placeholder="Search"
+                      value={searchDataForFIlter?.search}
+                      onChange={(e) =>
+                        setSearchDataForFIlter((prev) => ({
+                          ...prev,
+                          search: e.target.value,
+                        }))
+                      }
                       className="form-control form-control-sm formsearch"
                     />
                     <Link to className="btn btn-searchset">
@@ -421,11 +487,15 @@ const SalesList = () => {
                   <Select
                     className="select"
                     options={oldandlatestvalue}
-                    placeholder="Newest"
+                    value={searchDataForFIlter?.sort}
+                    onChange={(selectedOption) =>
+                      handleSearchDataForFIlter("sort", selectedOption)
+                    }
                   />
                 </div>
               </div>
-              {/* /Filter */}
+              {/* /Filter========================= */}
+
               <div
                 className={`card${isFilterVisible ? " visible" : ""}`}
                 id="filter_inputs"
@@ -435,27 +505,36 @@ const SalesList = () => {
                   <div className="row">
                     <div className="col-lg-3 col-sm-6 col-12">
                       <div className="input-blocks">
-                        <i data-feather="user" className="info-img" />
                         <User className="info-img" />
-
                         <Select
                           className="select"
-                          options={customername}
-                          placeholder="Newest"
+                          options={customer}
+                          value={searchDataForFIlter.customer}
+                          onChange={(selectedOption) =>
+                            handleSearchDataForFIlter(
+                              "customer",
+                              selectedOption
+                            )
+                          }
                         />
                       </div>
                     </div>
+
                     <div className="col-lg-2 col-sm-6 col-12">
                       <div className="input-blocks">
                         <StopCircle className="info-img" />
-
                         <Select
                           className="select"
                           options={status}
-                          placeholder="Newest"
+                          placeholder="Select Status"
+                          value={searchDataForFIlter.status}
+                          onChange={(selectedOption) =>
+                            handleSearchDataForFIlter("status", selectedOption)
+                          }
                         />
                       </div>
                     </div>
+
                     <div className="col-lg-2 col-sm-6 col-12">
                       <div className="input-blocks">
                         <FileText className="info-img" />
@@ -463,46 +542,53 @@ const SalesList = () => {
                           type="text"
                           placeholder="Enter Reference"
                           className="form-control"
+                          value={searchDataForFIlter.reference}
+                          onChange={(e) =>
+                            handleSearchDataForFIlter(
+                              "reference",
+                              e.target.value
+                            )
+                          }
                         />
                       </div>
                     </div>
+
                     <div className="col-lg-3 col-sm-6 col-12">
                       <div className="input-blocks">
                         <StopCircle className="info-img" />
-
                         <Select
                           className="select"
                           options={paymentstatus}
                           placeholder="Choose Payment Status"
+                          value={searchDataForFIlter.paymentStatus}
+                          onChange={(selectedOption) =>
+                            handleSearchDataForFIlter(
+                              "paymentStatus",
+                              selectedOption
+                            )
+                          }
                         />
                       </div>
                     </div>
+
                     <div className="col-lg-2 col-sm-6 col-12">
                       <div className="input-blocks">
                         <Link className="btn btn-filters ms-auto">
-                          {" "}
-                          <i
-                            data-feather="search"
-                            className="feather-search"
-                          />{" "}
-                          Search{" "}
+                          <i data-feather="search" className="feather-search" />
+                          Search
                         </Link>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              {/* /Filter */}
+
+              {/* /Filter ========================= */}
+              {/* =============================== table deta */}
               <div className="table-responsive">
                 <table className="table  datanew">
                   <thead>
                     <tr>
-                      <th className="no-sort">
-                        <label className="checkboxs">
-                          <input type="checkbox" id="select-all" />
-                          <span className="checkmarks" />
-                        </label>
-                      </th>
                       <th>Customer Name</th>
                       <th>Reference</th>
                       <th>Date</th>
@@ -516,107 +602,127 @@ const SalesList = () => {
                     </tr>
                   </thead>
                   <tbody className="sales-list">
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>Thomas</td>
-                      <td>SL0101</td>
-                      <td>19 Jan 2023</td>
-                      <td>
-                        <span className="badge badge-bgsuccess">Completed</span>
-                      </td>
-                      <td>$550</td>
-                      <td>$550</td>
-                      <td>$0.00</td>
-                      <td>
-                        <span className="badge badge-linesuccess">Paid</span>
-                      </td>
-                      <td>Admin</td>
-                      <td className="text-center">
-                        <Link
-                          className="action-set"
-                          to="#"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="true"
-                        >
-                          <i className="fa fa-ellipsis-v" aria-hidden="true" />
-                        </Link>
-                        <ul className="dropdown-menu">
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item"
-                              data-bs-toggle="modal"
-                              data-bs-target="#sales-details-new"
-                            >
-                              <i data-feather="eye" className="info-img" />
-                              Sale Detail
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item"
-                              data-bs-toggle="modal"
-                              data-bs-target="#edit-sales-new"
-                            >
-                              <i data-feather="edit" className="info-img" />
-                              Edit Sale
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item"
-                              data-bs-toggle="modal"
-                              data-bs-target="#showpayment"
-                            >
-                              <i
-                                data-feather="dollar-sign"
-                                className="info-img"
-                              />
-                              Show Payments
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item"
-                              data-bs-toggle="modal"
-                              data-bs-target="#createpayment"
-                            >
-                              <i
-                                data-feather="plus-circle"
-                                className="info-img"
-                              />
-                              Create Payment
-                            </Link>
-                          </li>
-                          <li>
-                            <Link to="#" className="dropdown-item">
-                              <i data-feather="download" className="info-img" />
-                              Download pdf
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="#"
-                              className="dropdown-item confirm-text mb-0"
-                            >
-                              <i data-feather="trash-2" className="info-img" />
-                              Delete Sale
-                            </Link>
-                          </li>
-                        </ul>
-                      </td>
-                    </tr>
+                    {orderList?.data.map((item, index) => (
+                      <tr key={index} className="text-center">
+                        <td>{item?.customerId?.name}</td>
+                        <td>{item.reference}</td>
+                        <td>
+                          {new Date(item.createdAt).toLocaleDateString(
+                            "en-GB",
+                            {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </td>
+
+                        <td>
+                          <span className="badge badge-bgsuccess">
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>{item.grandTotal}</td>
+                        <td>{item.payment}</td>
+                        <td>{item.due}</td>
+                        <td>
+                          <span className="badge badge-linesuccess">
+                            {item.status}
+                          </span>
+                        </td>
+                        <td>Admin</td>
+                        <td className="text-center">
+                          <Link
+                            className="action-set"
+                            to="#"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="true"
+                          >
+                            <i
+                              className="fa fa-ellipsis-v"
+                              aria-hidden="true"
+                            />
+                          </Link>
+                          <ul className="dropdown-menu">
+                            <li>
+                              <Link
+                                to="#"
+                                className="dropdown-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#sales-details-new"
+                              >
+                                <i data-feather="eye" className="info-img" />
+                                Sale Detail
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="#"
+                                className="dropdown-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#edit-sales-new"
+                              >
+                                <i data-feather="edit" className="info-img" />
+                                Edit Sale
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="#"
+                                className="dropdown-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#showpayment"
+                              >
+                                <i
+                                  data-feather="dollar-sign"
+                                  className="info-img"
+                                />
+                                Show Payments
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="#"
+                                className="dropdown-item"
+                                data-bs-toggle="modal"
+                                data-bs-target="#createpayment"
+                              >
+                                <i
+                                  data-feather="plus-circle"
+                                  className="info-img"
+                                />
+                                Create Payment
+                              </Link>
+                            </li>
+                            <li>
+                              <Link to="#" className="dropdown-item">
+                                <i
+                                  data-feather="download"
+                                  className="info-img"
+                                />
+                                Download pdf
+                              </Link>
+                            </li>
+                            <li>
+                              <Link
+                                to="#"
+                                className="dropdown-item confirm-text mb-0"
+                              >
+                                <i
+                                  data-feather="trash-2"
+                                  className="info-img"
+                                />
+                                Delete Sale
+                              </Link>
+                            </li>
+                          </ul>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
+              {/* ================================ */}
             </div>
           </div>
           {/* /product list */}
@@ -888,7 +994,7 @@ const SalesList = () => {
                               <label>Status</label>
                               <Select
                                 className="select"
-                                options={statusupdate}
+                                options={status}
                                 placeholder="status"
                                 value={selectedStatus}
                                 onChange={(option) => setSelectedStatus(option)}

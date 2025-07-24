@@ -60,7 +60,7 @@ const {
   updateUser,
   deleteUser,
 } = require("../controller/user.controller");
-const { createOrder } = require("../controller/order.controller");
+const { createOrder, getAllOrders } = require("../controller/order.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -119,5 +119,6 @@ router.put("/user/:id", updateUser);
 router.delete("/user/:id", deleteUser);
 // order routes
 router.post("/order", createOrder);
+router.get("/order", getAllOrders);
 
 module.exports = router;

@@ -4,12 +4,22 @@ const orderSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: "User",
+      required: true,
+    },
+    reference: {
+      type: String,
+      unique: true,
+    },
+    posId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Pos",
       required: true,
     },
     supplierId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Supplier",
+      ref: "User",
+      required: true,
     },
     products: [
       {
@@ -34,6 +44,13 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Completed", "Cancelled"],
       default: "Pending",
     },
+    posId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Pos",
+      required: true,
+    },
+    due: Number,
+    payment: Number,
   },
   { timestamps: true }
 );

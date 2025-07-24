@@ -17,7 +17,33 @@ export const orderApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
+    getOrders: builder.query({
+      query: ({
+        customer = null,
+        status = null,
+        reference = "",
+        paymentStatus = null,
+        search = "",
+        sort = null,
+        posId,
+      } = {}) => {
+        const params = new URLSearchParams();
+
+        if (customer) params.append("customer", customer);
+        if (status) params.append("status", status);
+        if (reference) params.append("reference", reference);
+        if (paymentStatus) params.append("paymentStatus", paymentStatus);
+        if (search) params.append("search", search);
+        if (sort) params.append("sort", sort);
+        if (posId) params.append("posId", posId);
+
+        const queryString = params.toString();
+
+        return `/order${queryString ? `?${queryString}` : ""}`;
+      },
+      providesTags: ["Order"],
+    }),
   }),
 });
 
-export const { useCreateOrderMutation } = orderApi;
+export const { useCreateOrderMutation, useGetOrdersQuery } = orderApi;
