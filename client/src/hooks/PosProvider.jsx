@@ -45,7 +45,7 @@ export const PosProvider = ({ children }) => {
       setPos(loadedPos);
     }
     setLoading(false);
-  }, []);
+  }, [getPos]);
 
   return (
     <PosContext.Provider value={{ pos, selectPos, removePos, loading }}>
