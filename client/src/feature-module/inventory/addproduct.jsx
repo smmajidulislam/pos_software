@@ -225,10 +225,14 @@ const AddProduct = () => {
       skip: !pos?._id,
     }
   );
-  const { data: wareHouseData, isLoading: wareHouseLoading } =
-    useGetWareHousesQuery(pos?._id, {
-      skip: !pos?._id,
-    });
+  const {
+    data: wareHouseData,
+    isLoading: wareHouseLoading,
+    error,
+  } = useGetWareHousesQuery(pos?._id, {
+    skip: !pos?._id,
+  });
+  console.log(wareHouseData, error);
   const { data: variantItems, isLoading: variantLoading } = useGetVariantsQuery(
     { search: "", status: "", date: "", sort: "", pos: pos?._id },
     {

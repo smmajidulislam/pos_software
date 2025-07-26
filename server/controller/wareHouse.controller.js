@@ -30,9 +30,9 @@ exports.createWareHouse = async (req, res) => {
 // 🔹 Get All Warehouses (Optional: Filter by POS or Admin)
 exports.getAllWareHouses = async (req, res) => {
   try {
-    const { pos } = req.query;
+    const { posId } = req.query;
     const query = {};
-    if (pos) query.pos = pos;
+    if (posId) query.pos = posId;
 
     const warehouses = await WareHouse.find(query).populate("pos", "name");
 

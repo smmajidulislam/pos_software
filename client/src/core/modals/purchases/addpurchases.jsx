@@ -17,18 +17,15 @@ const AddPurchases = () => {
   const [products, setProducts] = useState([]);
   const [Product, setProduct] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const {
-    data: supplierList,
-    isLoading: supplierLoading,
-    error,
-  } = useGetSuppliersQuery(
-    {
-      posId: pos?._id,
-    },
-    {
-      skip: !pos?._id,
-    }
-  );
+  const { data: supplierList, isLoading: supplierLoading } =
+    useGetSuppliersQuery(
+      {
+        posId: pos?._id,
+      },
+      {
+        skip: !pos?._id,
+      }
+    );
   const { data: productListById, isLoading: productLoadingById } =
     useGetProductByIdQuery(selectedProduct?.value, {
       skip: !selectedProduct,
@@ -42,15 +39,7 @@ const AddPurchases = () => {
       skip: !pos?._id,
     }
   );
-  console.log(
-    "============>",
-    supplierList,
-    productList,
-    productListById,
-    Product,
-    error,
-    "usePosId"
-  );
+  console.log(Product);
   useEffect(() => {
     if (supplierList?.suppliers?.length > 0 && !supplierLoading) {
       const filteredData = supplierList.suppliers.map((item) => ({
