@@ -67,9 +67,25 @@ exports.createProduct = async (req, res) => {
       "variantValues",
       "warranties",
       "warehouse",
+      "paid",
+      "due",
+      "grandTotal",
     ];
 
     const productData = {};
+    let reference;
+    let isExists = true;
+
+    // Generate unique reference
+    while (isExists) {
+      const refereNo = Math.floor(Math.random() * 1000000)
+        .toString()
+        .padStart(6, "0");
+      reference = `REF-${refereNo}`;
+      isExists = await Product.findOne({ reference });
+    }
+
+    productData.reference = reference;
 
     allowedFields.forEach((field) => {
       const value = req.body[field];
@@ -86,6 +102,9 @@ exports.createProduct = async (req, res) => {
           "discountValue",
           "taxValue",
           "quantityAlert",
+          "paid",
+          "due",
+          "grandTotal",
         ].includes(field)
       ) {
         productData[field] = Number(value) || 0;
@@ -107,13 +126,11 @@ exports.createProduct = async (req, res) => {
         )}`,
       });
     }
-
     const newProduct = new Product(productData);
     const savedProduct = await newProduct.save();
 
     res.status(201).json({ success: true, product: savedProduct });
   } catch (error) {
-    console.error("Create product error:", error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -142,7 +159,16 @@ exports.getProducts = async (req, res) => {
 
     return res.status(200).json({ message: "success", data });
   } catch (error) {
-    console.log(error);
+    return res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+exports.getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await Product.findById(id);
+    return res.status(200).json({ message: "success", data });
+  } catch (error) {
     return res.status(500).json({ message: error.message || "Server error" });
   }
 };

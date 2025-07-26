@@ -45,6 +45,7 @@ const {
 const {
   createProduct,
   getProducts,
+  getProductById,
 } = require("../controller/product.controller");
 const {
   createSupplier,
@@ -105,6 +106,7 @@ router.delete("/variants/:id", deleteVariant);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);
+router.get("/product/:id", getProductById);
 // supplier routea
 router.post("/supllier", createSupplier);
 router.get("/supllier", getSuppliers);

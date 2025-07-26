@@ -34,6 +34,7 @@ import { useGetCategoriesQuery } from "../../core/redux/api/categoryApi/category
 import { usePos } from "../../hooks/PosProvider";
 import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
 import { useCreateOrderMutation } from "../../core/redux/api/orderApi/orderApi";
+import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
 
 const Pos = () => {
   // state mangement
@@ -41,26 +42,39 @@ const Pos = () => {
   const [mainCategoryListShowing, setMainCategoryListShowing] = useState([]);
   const [catchCategoryId, setCatchCategoryId] = useState("allCategory");
   const [quantity, setQuantity] = useState(1);
+  const [customers, setCustomers] = useState([]);
   const [paidPayment, setPaidPayment] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const dispatch = useDispatch();
   const [createOrder] = useCreateOrderMutation();
   // data management
   const { pos } = usePos();
   const reduxStateOrders = useSelector((state) => state.posCart);
+  // const [createUser]=useCreateUserMutation();
   const { data: categoriesList } = useGetCategoriesQuery(
     {
       pos: pos?._id,
     },
     { skip: !pos?._id }
   );
+
   const { data: productsList } = useGetProductsQuery(
     {
       pos: pos?._id,
       categoryId: catchCategoryId,
     },
     { skip: !pos?._id }
+  );
+  const { data: usersList, isLoading: usersLoading } = useGetUsersQuery(
+    {
+      posId: pos?._id,
+      role: "customer",
+    },
+    {
+      skip: !pos?._id,
+    }
   );
   const handleProductOrder = (id) => {
     dispatch(addProduct(id));
@@ -70,7 +84,14 @@ const Pos = () => {
       setMainCategoryCount(categoriesList?.data.length);
       setMainCategoryListShowing(categoriesList?.data);
     }
-  }, [categoriesList]);
+    if (usersList && !usersLoading) {
+      const customerList = usersList?.map((user) => ({
+        value: user._id,
+        label: user.name,
+      }));
+      setCustomers(customerList);
+    }
+  }, [categoriesList, usersLoading, usersList]);
   const orderTax = useMemo(() => {
     return reduxStateOrders?.products.reduce(
       (acc, curr) => acc + curr.taxValue * quantity,
@@ -108,7 +129,7 @@ const Pos = () => {
   }, [grandTotal, paidPayment]);
 
   // data management end
-  const customers = [{ value: "walkInCustomer", label: "Walk in Customer" }];
+
   const tax = [
     { value: "exclusive", label: "Exclusive" },
     { value: "inclusive", label: "Inclusive" },
@@ -138,8 +159,7 @@ const Pos = () => {
   const handleOrderSubmit = async (statusType) => {
     try {
       const orderData = {
-        customerId: "6873d34cb7e0b2a59b96463c", // বা যেটা সিলেক্ট হবে
-        supplierId: "687f8e6fc34e0a634df4bb32", // ধরছি supplier holo pos user
+        customerId: selectedCustomer, // বা যেটা সিলেক্ট হবে
         posId: pos?._id,
         status: statusType, // "hold" | "void" | "Completed"
         paymentMethod: paymentMethod?.toLocaleLowerCase || "cash",
@@ -164,13 +184,16 @@ const Pos = () => {
         due: deuPayment,
       };
 
-      const res = await createOrder(orderData).unwrap();
-      console.log(res);
-      console.log("Order saved:", res?.data);
-      Swal.fire("Success", "Order submitted as " + statusType, "success");
+      const result = await createOrder(orderData).unwrap();
+      if (result?.message === "Order created successfully") {
+        Swal.fire("Success", "Order submitted as " + statusType, "success");
+      }
     } catch (err) {
-      Swal.fire("Error", "Failed to create order", "error");
-      console.error(err);
+      Swal.fire(
+        "Error",
+        "Failed to create order. please slect all field",
+        "error"
+      );
     }
   };
 
@@ -414,6 +437,7 @@ const Pos = () => {
                     </Link>
                   </div>
                 </div>
+
                 <div className="customer-info block-section">
                   <h6>Customer Information</h6>
                   <div className="input-block d-flex align-items-center">
@@ -421,7 +445,9 @@ const Pos = () => {
                       <Select
                         options={customers}
                         className="select"
-                        placeholder="Select an option"
+                        onChange={(option) =>
+                          setSelectedCustomer(option?.value)
+                        }
                       />
                     </div>
                     <Link

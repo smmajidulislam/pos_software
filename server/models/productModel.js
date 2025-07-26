@@ -39,7 +39,7 @@ const productSchema = new mongoose.Schema(
     },
     stock: { type: Number, default: 0 },
     discountValue: { type: Number, default: 0 },
-
+    reference: { type: String, required: true },
     taxType: {
       type: String,
       enum: ["salesTax", "exclusive"],
@@ -55,6 +55,9 @@ const productSchema = new mongoose.Schema(
     // Additional fields you have in data
     expiry: { type: Boolean, default: false },
     expiryDate: { type: Date },
+    paid: { type: Number, default: 0 },
+    due: { type: Number, default: 0 },
+    grandTotal: { type: Number, default: 0 },
     manufactureDate: { type: Date },
     manufacturer: { type: Boolean, default: false },
     parchacePrice: { type: Number },
