@@ -73,8 +73,9 @@ const AddPurchases = () => {
     if (productListById?.data && !productLoadingById) {
       setProduct(productListById.data);
     }
-    if (pos) {
+    if (pos && !posLoading) {
       setUsePosId(pos?._id);
+      console.log("aadddddddd ==========>", pos?._id);
     }
   }, [
     supplierList,
