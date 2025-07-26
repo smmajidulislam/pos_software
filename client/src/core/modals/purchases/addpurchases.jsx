@@ -73,7 +73,7 @@ const AddPurchases = () => {
     if (productListById?.data && !productLoadingById) {
       setProduct(productListById.data);
     }
-    if (pos && !posLoading) {
+    if (pos?._id && !posLoading) {
       setUsePosId(pos?._id);
       console.log("aadddddddd ==========>", pos?._id);
     }
@@ -85,7 +85,7 @@ const AddPurchases = () => {
     productLoadingById,
     productListById,
     posLoading,
-    pos,
+    pos?._id,
   ]);
   const status = [
     { value: "received", label: "Received" },
