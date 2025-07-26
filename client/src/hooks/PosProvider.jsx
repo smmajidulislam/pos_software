@@ -27,14 +27,13 @@ export const PosProvider = ({ children }) => {
   useEffect(() => {
     try {
       const storedPos = localStorage.getItem("pos");
-      console.log("================>token", storedPos);
       if (storedPos) {
         const posData = JSON.parse(storedPos);
         setPos(posData);
         setLoading(false);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Failed to retrieve POS:", error);
     }
   }, []);
 
