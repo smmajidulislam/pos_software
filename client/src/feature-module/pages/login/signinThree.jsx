@@ -6,7 +6,6 @@ import { useAuth } from "../../../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import { useLoginMutation } from "../../../core/redux/api/authapi/authApi";
 import { toast } from "react-toastify";
-import { usePos } from "../../../hooks/PosProvider";
 
 const SigninThree = () => {
   const [formData, setFormData] = useState({
@@ -17,7 +16,6 @@ const SigninThree = () => {
   const [loginUser] = useLoginMutation();
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { selectPos } = usePos();
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -37,10 +35,8 @@ const SigninThree = () => {
 
         if (formData.remember) {
           login(res.token, formData.remember);
-          selectPos(res.user);
         } else {
           login(res.token);
-          selectPos(res.user);
         }
 
         setFormData({

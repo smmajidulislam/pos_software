@@ -11,7 +11,6 @@ export const supplierApi = createApi({
     getSuppliers: builder.query({
       query: ({ posId, search, filter }) => {
         const params = new URLSearchParams();
-
         if (posId) params.append("posId", posId);
         if (search) params.append("search", search);
         if (filter) params.append("filter", filter);
