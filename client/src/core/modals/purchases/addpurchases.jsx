@@ -11,10 +11,11 @@ import {
 } from "../../redux/api/productapi/productApi";
 
 const AddPurchases = () => {
-  const { pos } = usePos();
+  const { pos, loading: posLoading } = usePos();
   const [supplier, setSupplier] = useState([]);
   const [selectedSupllier, setSelectedSupplier] = useState(null);
   const [products, setProducts] = useState([]);
+  const [usePosId, setUsePosId] = useState("");
   const [Product, setProduct] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const {
@@ -35,14 +36,24 @@ const AddPurchases = () => {
     });
   const { data: productList, isLoading: productLoading } = useGetProductsQuery(
     {
-      pos: pos?._id,
+      pos: !usePosId,
       categoryId: "allCategory",
     },
     {
-      skip: !pos?._id,
+      skip: !usePosId,
     }
   );
-  console.log(supplierList, productList, productListById, Product, error);
+  console.log(
+    "============>",
+    usePosId,
+    supplierList,
+    productList,
+    productListById,
+    Product,
+    error,
+    "usePosId",
+    usePosId
+  );
   useEffect(() => {
     if (supplierList?.suppliers?.length > 0 && !supplierLoading) {
       const filteredData = supplierList.suppliers.map((item) => ({
@@ -62,6 +73,9 @@ const AddPurchases = () => {
     if (productListById?.data && !productLoadingById) {
       setProduct(productListById.data);
     }
+    if (pos) {
+      setUsePosId(pos?._id);
+    }
   }, [
     supplierList,
     supplierLoading,
@@ -69,6 +83,8 @@ const AddPurchases = () => {
     productLoading,
     productLoadingById,
     productListById,
+    posLoading,
+    pos,
   ]);
   const status = [
     { value: "received", label: "Received" },

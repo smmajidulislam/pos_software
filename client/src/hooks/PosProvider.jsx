@@ -1,5 +1,4 @@
-import React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 // Create Context
 const PosContext = createContext();
@@ -7,40 +6,53 @@ const PosContext = createContext();
 // Provider Component
 export const PosProvider = ({ children }) => {
   const [pos, setPos] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage on first load
+  // Load POS from localStorage
   const getPos = () => {
-    const getSlectedPos = JSON.parse(localStorage.getItem("pos"));
-    if (!getSlectedPos) return null;
-    return getSlectedPos;
+    try {
+      const storedPos = localStorage.getItem("pos");
+      if (storedPos) {
+        return JSON.parse(storedPos);
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing pos from localStorage:", error);
+      return null;
+    }
   };
 
-  // Login Function
+  // Select POS and save to localStorage
   const selectPos = (posData) => {
-    localStorage.setItem("pos", JSON.stringify(posData));
-    setPos(posData);
+    try {
+      localStorage.setItem("pos", JSON.stringify(posData));
+      setPos(posData);
+    } catch (error) {
+      console.error("Failed to store POS:", error);
+    }
   };
 
-  // Logout Function
+  // Remove POS from localStorage
   const removePos = () => {
     localStorage.removeItem("pos");
     setPos(null);
   };
+
+  // Load POS on first render
   useEffect(() => {
-    const pos = getPos();
-    if (pos) {
-      setPos(pos);
-    } else {
-      setPos(null);
+    const loadedPos = getPos();
+    if (loadedPos) {
+      setPos(loadedPos);
     }
+    setLoading(false);
   }, []);
 
   return (
-    <PosContext.Provider value={{ pos, selectPos, removePos }}>
+    <PosContext.Provider value={{ pos, selectPos, removePos, loading }}>
       {children}
     </PosContext.Provider>
   );
 };
 
-// Custom hook to use auth
+// Custom hook to use Pos
 export const usePos = () => useContext(PosContext);
