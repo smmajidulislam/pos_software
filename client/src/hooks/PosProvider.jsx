@@ -27,14 +27,14 @@ export const PosProvider = ({ children }) => {
   useEffect(() => {
     try {
       const storedPos = localStorage.getItem("pos");
+      console.log("================>token", storedPos);
       if (storedPos) {
         const posData = JSON.parse(storedPos);
         setPos(posData);
         setLoading(false);
       }
-      return null;
     } catch (error) {
-      return null;
+      console.log(error);
     }
   }, []);
 
