@@ -8,25 +8,12 @@ export const PosProvider = ({ children }) => {
   const [pos, setPos] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load POS from localStorage
-  const getPos = () => {
-    try {
-      const storedPos = localStorage.getItem("pos");
-      if (storedPos) {
-        return JSON.parse(storedPos);
-      }
-      return null;
-    } catch (error) {
-      console.error("Error parsing pos from localStorage:", error);
-      return null;
-    }
-  };
-
   // Select POS and save to localStorage
   const selectPos = (posData) => {
     try {
       localStorage.setItem("pos", JSON.stringify(posData));
       setPos(posData);
+      setLoading(false);
     } catch (error) {
       console.error("Failed to store POS:", error);
     }
@@ -37,15 +24,19 @@ export const PosProvider = ({ children }) => {
     localStorage.removeItem("pos");
     setPos(null);
   };
-
-  // Load POS on first render
   useEffect(() => {
-    const loadedPos = getPos();
-    if (loadedPos) {
-      setPos(loadedPos);
+    try {
+      const storedPos = localStorage.getItem("pos");
+      if (storedPos) {
+        const posData = JSON.parse(storedPos);
+        setPos(posData);
+        setLoading(false);
+      }
+      return null;
+    } catch (error) {
+      return null;
     }
-    setLoading(false);
-  }, [getPos]);
+  }, []);
 
   return (
     <PosContext.Provider value={{ pos, selectPos, removePos, loading }}>
