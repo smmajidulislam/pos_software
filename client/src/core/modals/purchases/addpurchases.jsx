@@ -32,7 +32,7 @@ const AddPurchases = () => {
     });
   const { data: productList, isLoading: productLoading } = useGetProductsQuery(
     {
-      pos: !pos?._id,
+      pos: pos?._id,
       categoryId: "allCategory",
     },
     {

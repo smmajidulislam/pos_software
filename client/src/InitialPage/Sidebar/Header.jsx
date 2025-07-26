@@ -319,13 +319,6 @@ const Header = () => {
               data-bs-toggle="dropdown"
             >
               <span className="user-info">
-                <span className="user-letter">
-                  <ImageWithBasePath
-                    src="assets/img/store/store-01.png"
-                    alt="Store Logo"
-                    className="img-fluid"
-                  />
-                </span>
                 <span className="user-detail">
                   <span className="user-name">
                     {pos?.label || "Select Store"}
@@ -353,56 +346,6 @@ const Header = () => {
           </li>
           {/* /Select Store */}
 
-          {/* Flag */}
-          {/* <li className="nav-item dropdown has-arrow flag-nav nav-item-box">
-            <Link
-              className="nav-link dropdown-toggle"
-              data-bs-toggle="dropdown"
-              to="#"
-              role="button"
-            >
-              <ImageWithBasePath
-                src="assets/img/flags/us.png"
-                alt="img"
-                height={16}
-              />
-            </Link>
-            <div className="dropdown-menu dropdown-menu-right">
-              <Link to="#" className="dropdown-item active">
-                <ImageWithBasePath
-                  src="assets/img/flags/us.png"
-                  alt="img"
-                  height={16}
-                />
-                English
-              </Link>
-              <Link to="#" className="dropdown-item">
-                <ImageWithBasePath
-                  src="assets/img/flags/fr.png"
-                  alt="img"
-                  height={16}
-                />{" "}
-                French
-              </Link>
-              <Link to="#" className="dropdown-item">
-                <ImageWithBasePath
-                  src="assets/img/flags/es.png"
-                  alt="img"
-                  height={16}
-                />{" "}
-                Spanish
-              </Link>
-              <Link to="#" className="dropdown-item">
-                <ImageWithBasePath
-                  src="assets/img/flags/de.png"
-                  alt="img"
-                  height={16}
-                />{" "}
-                German
-              </Link>
-            </div>
-          </li> */}
-          {/* /Flag */}
           <li className="nav-item nav-item-box">
             <Link
               to="#"
