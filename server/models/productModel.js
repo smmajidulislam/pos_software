@@ -55,9 +55,6 @@ const productSchema = new mongoose.Schema(
     // Additional fields you have in data
     expiry: { type: Boolean, default: false },
     expiryDate: { type: Date },
-    paid: { type: Number, default: 0 },
-    due: { type: Number, default: 0 },
-    grandTotal: { type: Number, default: 0 },
     manufactureDate: { type: Date },
     manufacturer: { type: Boolean, default: false },
     parchacePrice: { type: Number },

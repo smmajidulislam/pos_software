@@ -7,13 +7,18 @@ import { Search, XCircle } from "react-feather";
 import { all_routes } from "../../Router/all_routes";
 import { useGetAllPosQuery } from "../../core/redux/api/posApi/posApi";
 import { usePos } from "../../hooks/PosProvider";
-
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/AuthProvider";
+import { useLogoutMutation } from "../../core/redux/api/authapi/authApi";
 const Header = () => {
   const route = all_routes;
   const [toggle, SetToggle] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data, isLoading } = useGetAllPosQuery();
   const { selectPos, removePos, pos } = usePos();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [logOut] = useLogoutMutation();
 
   const isElementVisible = (element) => {
     return element.offsetWidth > 0 || element.offsetHeight > 0;
@@ -158,7 +163,15 @@ const Header = () => {
   };
   const handleChangePos = (item) => {
     removePos();
+
     selectPos(item);
+  };
+  const handleLoguot = async () => {
+    // api call here
+    removePos();
+    await logOut();
+    logout();
+    navigate("/signin-3");
   };
 
   return (
@@ -312,34 +325,34 @@ const Header = () => {
           {/* /Search */}
 
           {/* Select Store */}
-          <li className="nav-item dropdown has-arrow main-drop select-store-dropdown">
+          <li className="nav-item dropdown has-arrow main-drop select-store-dropdown cursor-pointer">
             <Link
               to="#"
-              className="dropdown-toggle nav-link select-store"
+              className="dropdown-toggle nav-link select-store cursor-pointer"
               data-bs-toggle="dropdown"
             >
-              <span className="user-info">
-                <span className="user-detail">
-                  <span className="user-name">
+              <span className="user-info cursor-pointer">
+                <span className="user-detail cursor-pointer">
+                  <span className="user-name cursor-pointer">
                     {pos?.label || "Select Store"}
                   </span>
                 </span>
               </span>
             </Link>
-            <div className="dropdown-menu dropdown-menu-right">
+            <div className="dropdown-menu dropdown-menu-right cursor-pointer">
               {!isLoading &&
                 data?.map((item, index) => (
                   <div
-                    className="dropdown-item"
+                    className="dropdown-item cursor-pointer"
                     key={index}
                     onClick={() => handleChangePos(item)}
                   >
                     <ImageWithBasePath
                       src="assets/img/store/store-04.png"
                       alt="Store Logo"
-                      className="img-fluid"
+                      className="img-fluid cursor-pointer"
                     />{" "}
-                    {item?.label}
+                    <div className="cursor-pointer">{item?.label}</div>
                   </div>
                 ))}
             </div>
@@ -402,14 +415,17 @@ const Header = () => {
                   Settings
                 </Link>
                 <hr className="m-0" />
-                <Link className="dropdown-item logout pb-0" to="/signin">
+                <button
+                  className="dropdown-item logout pb-0"
+                  onClick={handleLoguot}
+                >
                   <ImageWithBasePath
                     src="assets/img/icons/log-out.svg"
                     alt="img"
                     className="me-2"
                   />
                   Logout
-                </Link>
+                </button>
               </div>
             </div>
           </li>

@@ -62,6 +62,10 @@ const {
   deleteUser,
 } = require("../controller/user.controller");
 const { createOrder, getAllOrders } = require("../controller/order.controller");
+const {
+  createPurchase,
+  getAllPurchases,
+} = require("../controller/Purchase.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -103,6 +107,9 @@ router.get("/variants", getVariants);
 router.get("/variants/:id", getVariantById);
 router.put("/variants/:id", updateVariant);
 router.delete("/variants/:id", deleteVariant);
+// product routes
+router.post("/product/purchace", createPurchase);
+router.get("/product/purchace", getAllPurchases);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);

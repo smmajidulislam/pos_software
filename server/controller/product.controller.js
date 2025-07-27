@@ -67,9 +67,6 @@ exports.createProduct = async (req, res) => {
       "variantValues",
       "warranties",
       "warehouse",
-      "paid",
-      "due",
-      "grandTotal",
     ];
 
     const productData = {};
@@ -102,9 +99,6 @@ exports.createProduct = async (req, res) => {
           "discountValue",
           "taxValue",
           "quantityAlert",
-          "paid",
-          "due",
-          "grandTotal",
         ].includes(field)
       ) {
         productData[field] = Number(value) || 0;

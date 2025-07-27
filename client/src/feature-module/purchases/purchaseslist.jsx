@@ -21,8 +21,8 @@ import ImportPurchases from "../../core/modals/purchases/importpurchases";
 import EditPurchases from "../../core/modals/purchases/editpurchases";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
-import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
 import { usePos } from "../../hooks/PosProvider";
+import { useGetAllParchaceQuery } from "../../core/redux/api/purchageApi/purchaceApi";
 
 const PurchasesList = () => {
   const dispatch = useDispatch();
@@ -37,8 +37,8 @@ const PurchasesList = () => {
   });
   const [editItem, setEditItem] = useState(null);
   const { pos } = usePos();
-  const { data: productdata } = useGetProductsQuery(
-    { ...filters, pos: pos?._id },
+  const { data: productdata } = useGetAllParchaceQuery(
+    { pos: pos?._id },
     {
       skip: !pos?._id,
     }
@@ -131,7 +131,6 @@ const PurchasesList = () => {
       }
     });
   };
-  console.log(productdata);
   return (
     <div>
       <div className="page-wrapper">
@@ -377,29 +376,18 @@ const PurchasesList = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {productdata?.data?.map((item, index) => (
+                    {productdata?.map((item, index) => (
                       <tr className="text-center" key={index}>
                         <td>{item.productName}</td>
                         <td>{item.reference || "REF-000000"} </td>
-                        <td>
-                          {item.manufactureDate
-                            ? new Date(item.manufactureDate).toLocaleDateString(
-                                "en-GB",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
-                            : ""}
-                        </td>
+                        <td>{item.date}</td>
                         <td>
                           <span className="badges status-badge">
                             {item.status || "Pending"}
                           </span>
                         </td>
                         <td>{item.grandTotal || 0}</td>
-                        <td>{item.paid || 0}</td>
+                        <td>{item.payment || 0}</td>
                         <td>{item.due || 0}</td>
 
                         <td className="action-table-data">

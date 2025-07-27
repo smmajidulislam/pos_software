@@ -332,13 +332,6 @@ export const SidebarData = [
             icon: <Icon.Settings />,
             submenuItems: [{ label: "Profile", link: "/general-settings" }],
           },
-
-          {
-            label: "Logout",
-            link: "/signin",
-            icon: <Icon.LogOut />,
-            showSubRoute: false,
-          },
         ],
       },
     ],
