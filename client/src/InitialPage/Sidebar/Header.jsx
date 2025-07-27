@@ -21,6 +21,7 @@ const Header = () => {
   const [logOut] = useLogoutMutation();
 
   const isElementVisible = (element) => {
+    if (!element) return false;
     return element.offsetWidth > 0 || element.offsetHeight > 0;
   };
 
@@ -50,6 +51,7 @@ const Header = () => {
 
       const body = document.body;
       const toggleBtn = document.getElementById("toggle_btn");
+      if (!toggleBtn) return;
 
       if (
         body.classList.contains("mini-sidebar") &&

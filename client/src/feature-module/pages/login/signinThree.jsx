@@ -13,7 +13,7 @@ const SigninThree = () => {
     password: "",
     remember: false,
   });
-  const [loginUser] = useLoginMutation();
+  const [loginUser, { isLoading }] = useLoginMutation();
   const navigate = useNavigate();
   const { login } = useAuth();
   const handleChange = (e) => {
@@ -135,8 +135,12 @@ const SigninThree = () => {
                     </div>
                   </div>
                   <div className="form-login">
-                    <button type="submit" className="btn btn-login">
-                      Sign In
+                    <button
+                      type="submit"
+                      className="btn btn-login"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Sign In"}
                     </button>
                   </div>
                   <div className="signinform">
