@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Filter } from "react-feather";
 import Select from "react-select";
 import { DatePicker } from "antd";
+import dayjs from "dayjs";
 import { useGetSuppliersQuery } from "../../core/redux/api/supplierApi/supplierApi";
 import { usePos } from "../../hooks/PosProvider";
 import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
@@ -32,6 +33,9 @@ const SalesList = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [payingAmount, setPayingAmount] = useState(0);
+  const [remaingDueAmount, setRemainingDueAmount] = useState(0);
+
   const grandTotal = selectedProduct.reduce(
     (acc, curr) => acc + Number(curr.price),
     0
@@ -63,6 +67,7 @@ const SalesList = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDateForPayment, setSelectedDateForPayment] = useState(dayjs());
   const [duePayment, setDuePayment] = useState(0);
   const [pay, setPay] = useState(0);
   // ====================================================
@@ -82,6 +87,12 @@ const SalesList = () => {
     }));
   };
   // ====================================================
+  const handleCreatePayment = (e) => {
+    e.preventDefault();
+    const fromData = new FormData(e.target);
+    const data = Object.fromEntries(fromData.entries());
+    console.log(data);
+  };
 
   const { data: usersList, isLoading: usersLoading } = useGetUsersQuery({
     role: "customer",
@@ -110,7 +121,6 @@ const SalesList = () => {
       skip: !pos?._id,
     }
   );
-  console.log(selectedOrder);
 
   const handleQuantityChange = (productId, newQty) => {
     const originalProduct = productsList?.data.find(
@@ -279,6 +289,10 @@ const SalesList = () => {
       });
     }
   };
+  const handlenextDue = (num) => {
+    setPayingAmount(num);
+    setRemainingDueAmount(Number(selectedOrder?.due - num));
+  };
 
   useEffect(() => {
     if (supplierList) {
@@ -329,7 +343,10 @@ const SalesList = () => {
   const handleDateChange = (date) => {
     setSelectedDate(date);
   };
-
+  const handleDateChangeForCreatePayment = (date) => {
+    setSelectedDateForPayment(date); // ✅ ইউজার নতুন তারিখ নিলে সেট হবে
+  };
+  console.log(selectedOrder);
   const renderTooltip = (props) => (
     <Tooltip id="pdf-tooltip" {...props}>
       Pdf
@@ -971,7 +988,7 @@ const SalesList = () => {
                                   <h4>Payment</h4>
                                   <input
                                     type="text"
-                                    className="form-control"
+                                    className="form-control text-center"
                                     name="payment"
                                     value={pay}
                                     onChange={(e) => handlePaymentChange(e)}
@@ -981,7 +998,7 @@ const SalesList = () => {
                                   <h4>Due</h4>
                                   <input
                                     type="text"
-                                    className="form-control"
+                                    className="form-control text-center"
                                     name="due"
                                     value={duePayment}
                                     readOnly
@@ -1792,50 +1809,72 @@ const SalesList = () => {
                 </button>
               </div>
               <div className="modal-body custom-modal-body">
-                <form>
+                <form onSubmit={handleCreatePayment}>
                   <div className="row">
                     <div className="col-lg-6">
                       <div className="input-blocks">
                         <label> Date</label>
                         <div className="input-groupicon calender-input">
                           <DatePicker
-                            selected={selectedDate}
-                            onChange={handleDateChange}
-                            type="date"
+                            value={selectedDateForPayment}
+                            onChange={handleDateChangeForCreatePayment}
                             className="filterdatepicker"
-                            dateFormat="dd-MM-yyyy"
                             placeholder="Choose Date"
+                            format="DD-MM-YYYY"
+                            readOnly
+                            disabled
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="col-lg-6 col-sm-12 col-12">
-                      <div className="input-blocks">
-                        <label>Reference</label>
-                        <input type="text" className="form-control" />
-                      </div>
-                    </div>
                   </div>
                   <div className="row">
-                    <div className="col-lg-4 col-sm-12 col-12">
+                    <div className="col-lg-3 col-sm-12 col-12">
                       <div className="input-blocks">
-                        <label>Received Amount</label>
+                        <label>Total due Amount</label>
                         <div className="input-groupicon calender-input">
                           <i data-feather="dollar-sign" className="info-img" />
-                          <input type="text" />
+                          <input
+                            type="text"
+                            name="due"
+                            className="form-control text-center"
+                            readOnly
+                            value={selectedOrder?.due}
+                          />
                         </div>
                       </div>
                     </div>
-                    <div className="col-lg-4 col-sm-12 col-12">
+                    <div className="col-lg-3 col-sm-12 col-12">
                       <div className="input-blocks">
                         <label>Paying Amount</label>
                         <div className="input-groupicon calender-input">
                           <i data-feather="dollar-sign" className="info-img" />
-                          <input type="text" />
+                          <input
+                            type="number"
+                            name="payingamount"
+                            className="form-control text-center"
+                            value={payingAmount}
+                            onChange={(e) => handlenextDue(e.target.value)}
+                          />
                         </div>
                       </div>
                     </div>
-                    <div className="col-lg-4 col-sm-12 col-12">
+                    <div className="col-lg-3 col-sm-12 col-12">
+                      <div className="input-blocks">
+                        <label>Due Blance</label>
+                        <div className="input-groupicon calender-input">
+                          <i data-feather="dollar-sign" className="info-img" />
+                          <input
+                            type="number"
+                            name="dueblance"
+                            className="form-control text-center"
+                            value={remaingDueAmount}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-lg-3 col-sm-12 col-12">
                       <div className="input-blocks">
                         <label>Payment type</label>
 
@@ -1849,7 +1888,11 @@ const SalesList = () => {
                     <div className="col-lg-12">
                       <div className="input-blocks">
                         <label>Description</label>
-                        <textarea className="form-control" defaultValue={""} />
+                        <textarea
+                          className="form-control"
+                          name="description"
+                          defaultValue={""}
+                        />
                         <p>Maximum 60 Characters</p>
                       </div>
                     </div>
@@ -1863,9 +1906,13 @@ const SalesList = () => {
                       >
                         Cancel
                       </button>
-                      <Link to="#" className="btn btn-submit">
+                      <button
+                        type="submit"
+                        className="btn btn-submit"
+                        data-bs-dismiss="modal"
+                      >
                         Submit
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </form>
