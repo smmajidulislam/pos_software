@@ -57,9 +57,9 @@ const createPurchase = async (req, res) => {
       status: status?.value || status,
       date,
     });
-    const productToUpdate = await Product.findById(product?._id || product);
+    const productToUpdate = await Product.findById(product?._id);
     if (productToUpdate) {
-      const validQuantity = Number(quantity) || 0;
+      const validQuantity = Number(quantity);
       productToUpdate.stock = Number(productToUpdate.stock) + validQuantity;
       await productToUpdate.save();
     }

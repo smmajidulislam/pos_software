@@ -11,7 +11,10 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-
+    pos: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Pos",
+    },
     paymentDate: {
       type: Date,
       default: Date.now,

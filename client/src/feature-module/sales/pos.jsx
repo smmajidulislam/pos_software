@@ -2,18 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Box } from "react-feather";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
-import {
-  RefreshCcw,
-  RotateCw,
-  ShoppingCart,
-} from "feather-icons-react/build/IconComponents";
-import {
-  Check,
-  CheckCircle,
-  MoreVertical,
-  Trash2,
-  UserPlus,
-} from "react-feather";
+import { RotateCw } from "feather-icons-react/build/IconComponents";
+import { Check, CheckCircle, Trash2, UserPlus } from "react-feather";
 import Select from "react-select";
 import PlusCircle from "feather-icons-react/build/IconComponents/PlusCircle";
 import MinusCircle from "feather-icons-react/build/IconComponents/MinusCircle";
@@ -287,39 +277,19 @@ const Pos = () => {
       }
     });
   };
+  const handleReset = () => {
+    window.location.reload();
+  };
   return (
     <div>
       <div className="page-wrapper pos-pg-wrapper ms-0">
         <div className="content pos-design p-0">
           <div className="btn-row d-sm-flex align-items-center">
-            <Link
-              to="#"
-              className="btn btn-secondary mb-xs-3"
-              data-bs-toggle="modal"
-              data-bs-target="#orders"
-            >
-              <span className="me-1 d-flex align-items-center">
-                <ShoppingCart className="feather-16" />
+            <button className="btn btn-info" onClick={handleReset}>
+              <span className="me-1 d-flex  align-items-center">
+                <RotateCw className="feather-16 mr-1" /> Reset
               </span>
-              View Orders
-            </Link>
-            <Link to="#" className="btn btn-info">
-              <span className="me-1 d-flex align-items-center">
-                <RotateCw className="feather-16" />
-              </span>
-              Reset
-            </Link>
-            <Link
-              to="#"
-              className="btn btn-primary"
-              data-bs-toggle="modal"
-              data-bs-target="#recents"
-            >
-              <span className="me-1 d-flex align-items-center">
-                <RefreshCcw className="feather-16" />
-              </span>
-              Transaction
-            </Link>
+            </button>
           </div>
           <div className="row align-items-start pos-wrapper">
             <div className="col-md-12 col-lg-8">
@@ -356,7 +326,6 @@ const Pos = () => {
                         <Box size={28} color="#3b82f6" />
                       </div>
                       <h6 className="text-sm font-semibold">{category.name}</h6>
-                      <span className="text-xs text-gray-500">4 Items</span>
                     </div>
                   ))}
                 </Slider>
@@ -376,19 +345,20 @@ const Pos = () => {
                               onClick={() => handleProductOrder(product)}
                             >
                               <div className="product-info default-cover card">
-                                <Link to="#" className="img-bg">
+                                <div className="img-bg">
                                   <ImageWithBasePath
                                     src={
                                       product?.images?.[0]?.url ||
                                       "assets/img/products/default.png"
                                     }
+                                    width={137}
                                     alt={product?.productName}
                                     isBase={true}
                                   />
                                   <span>
                                     <Check className="feather-16" />
                                   </span>
-                                </Link>
+                                </div>
 
                                 <h6 className="cat-name">
                                   <Link to="#">
@@ -423,21 +393,6 @@ const Pos = () => {
             </div>
             <div className="col-md-12 col-lg-4 ps-0">
               <aside className="product-order-list">
-                <div className="head d-flex align-items-center justify-content-between w-100">
-                  <div>
-                    <h5>Order List</h5>
-                    <span>Transaction ID : #65565</span>
-                  </div>
-                  <div>
-                    <Link className="confirm-text" to="#">
-                      <Trash2 className="feather-16 text-danger me-1" />
-                    </Link>
-                    <Link to="#" className="text-default">
-                      <MoreVertical className="feather-16" />
-                    </Link>
-                  </div>
-                </div>
-
                 <div className="customer-info block-section">
                   <h6>Customer Information</h6>
                   <div className="input-block d-flex align-items-center">

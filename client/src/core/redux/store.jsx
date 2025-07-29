@@ -12,6 +12,7 @@ import { supplierApi } from "./api/supplierApi/supplierApi";
 import { userApi } from "./api/userApi/userApi";
 import { orderApi } from "./api/orderApi/orderApi";
 import { parchaceApi } from "./api/purchageApi/purchaceApi";
+import { paymentApi } from "./api/paymentApi/paymentApi";
 import posCartReducer from "./actions/orderAction";
 
 const store = configureStore({
@@ -30,6 +31,7 @@ const store = configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,
     [parchaceApi.reducerPath]: parchaceApi.reducer,
+    [paymentApi.reducerPath]: paymentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -44,7 +46,8 @@ const store = configureStore({
       supplierApi.middleware,
       userApi.middleware,
       orderApi.middleware,
-      parchaceApi.middleware
+      parchaceApi.middleware,
+      paymentApi.middleware
     ),
 });
 

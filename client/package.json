@@ -27,7 +27,9 @@
     "dayjs": "^1.11.13",
     "dragula": "^3.7.3",
     "feather-icons-react": "^0.6.2",
+    "file-saver": "^2.0.5",
     "fslightbox-react": "^1.7.6",
+    "html2pdf.js": "^0.10.3",
     "lightbox.js-react": "^0.9.9",
     "moment": "^2.30.1",
     "owl.carousel": "^2.3.4",
@@ -74,6 +76,7 @@
     "sweetalert2": "^11.10.6",
     "sweetalert2-react-content": "^5.0.7",
     "weather-icons-react": "^1.2.0",
+    "xlsx": "^0.18.5",
     "yet-another-react-lightbox": "^3.17.1"
   },
   "scripts": {

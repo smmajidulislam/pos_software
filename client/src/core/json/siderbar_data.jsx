@@ -14,8 +14,7 @@ export const SidebarData = [
         icon: <Icon.Grid />,
         submenu: true,
         showSubRoute: false,
-
-        submenuItems: [{ label: "Admin Dashboard", link: "/" }],
+        link: "/",
       },
       {
         label: "Inventory",
@@ -182,22 +181,7 @@ export const SidebarData = [
           },
         ],
       },
-      {
-        label: "Promo",
-        submenuOpen: true,
-        submenuHdr: "Promo",
-        showSubRoute: false,
-        icon: <Icon.ShoppingCart />,
-        submenuItems: [
-          {
-            label: "Coupons",
-            link: "/coupons",
-            icon: <Icon.ShoppingCart />,
-            showSubRoute: false,
-            submenu: false,
-          },
-        ],
-      },
+
       {
         label: "People",
         submenuOpen: true,
@@ -283,12 +267,18 @@ export const SidebarData = [
         ],
       },
       {
-        label: "User Management",
+        label: "Accounts",
         submenuOpen: true,
         showSubRoute: false,
         submenuHdr: "User Management",
         icon: <Icon.UserCheck />,
         submenuItems: [
+          {
+            label: "Profile",
+            link: "/profile",
+            icon: <Icon.User />,
+            showSubRoute: false,
+          },
           {
             label: "Users",
             link: "/users",
@@ -303,21 +293,7 @@ export const SidebarData = [
           },
         ],
       },
-      {
-        label: "Pages",
-        submenuOpen: true,
-        showSubRoute: false,
-        submenuHdr: "Pages",
-        icon: <Icon.FileText />,
-        submenuItems: [
-          {
-            label: "Profile",
-            link: "/profile",
-            icon: <Icon.User />,
-            showSubRoute: false,
-          },
-        ],
-      },
+
       {
         label: "Settings",
         submenu: true,

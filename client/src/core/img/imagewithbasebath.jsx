@@ -10,7 +10,6 @@ const ImageWithBasePath = (props) => {
     fullSrc = `${base_path}${props.src}`;
   }
 
-  // const fullSrc = `${base_path}${props.src}`;
   return (
     <>
       <img

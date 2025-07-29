@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
@@ -25,7 +25,13 @@ import {
   useCreateOrderMutation,
   useGetOrdersQuery,
 } from "../../core/redux/api/orderApi/orderApi";
+import { useCreatePaymentMutation } from "../../core/redux/api/paymentApi/paymentApi";
 import Swal from "sweetalert2";
+import {
+  handlePrint,
+  handleDownloadPDF,
+  handleDownloadExcel,
+} from "../../utils/Print";
 
 const SalesList = () => {
   const dispatch = useDispatch();
@@ -35,7 +41,9 @@ const SalesList = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [payingAmount, setPayingAmount] = useState(0);
   const [remaingDueAmount, setRemainingDueAmount] = useState(0);
+  const [createPayment] = useCreatePaymentMutation();
 
+  const [method, setMethod] = useState(null);
   const grandTotal = selectedProduct.reduce(
     (acc, curr) => acc + Number(curr.price),
     0
@@ -69,7 +77,20 @@ const SalesList = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateForPayment, setSelectedDateForPayment] = useState(dayjs());
   const [duePayment, setDuePayment] = useState(0);
+  const [createOrder] = useCreateOrderMutation();
+
   const [pay, setPay] = useState(0);
+  const { data: productsList, refetch } = useGetProductsQuery(
+    {
+      pos: pos?._id,
+      search: search,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+  const salesDetailsRef = useRef(null);
+
   // ====================================================
   const [searchDataForFIlter, setSearchDataForFIlter] = useState({
     customer: null,
@@ -87,26 +108,54 @@ const SalesList = () => {
     }));
   };
   // ====================================================
-  const handleCreatePayment = (e) => {
+  const handleCreatePayment = async (e) => {
     e.preventDefault();
     const fromData = new FormData(e.target);
     const data = Object.fromEntries(fromData.entries());
-    console.log(data);
+    const payload = {
+      orderId: selectedOrder?._id,
+      paymentAmount: data?.payingamount,
+      paymentDate: selectedDateForPayment,
+      method: method?.value,
+      note: data?.description,
+    };
+    if (
+      !payload.orderId ||
+      !payload.paymentAmount ||
+      !payload.paymentDate ||
+      !payload.method
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing required fields",
+        text: "Please fill all required fields before submitting payment.",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+    const res = await createPayment(payload).unwrap();
+    if (res?.ok) {
+      Swal.fire({
+        icon: "success",
+        title: res.message,
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      refetch();
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Something went wrong",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
   };
 
   const { data: usersList, isLoading: usersLoading } = useGetUsersQuery({
     role: "customer",
   });
-  const { data: productsList } = useGetProductsQuery(
-    {
-      pos: pos?._id,
-      search: search,
-    },
-    {
-      skip: !pos?._id || search === "",
-    }
-  );
-  const [createOrder] = useCreateOrderMutation();
+
   const { data: orderList } = useGetOrdersQuery(
     {
       customer: searchDataForFIlter?.customer?.value,
@@ -289,7 +338,17 @@ const SalesList = () => {
       });
     }
   };
-  const handlenextDue = (num) => {
+  const handlenextDue = (num, isEqual) => {
+    if (Number(isEqual) === Number(0)) {
+      Swal.fire({
+        icon: "error",
+        title: "Payment amount must be less than due amount",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#00ff00",
+        timer: 1000,
+      });
+      return;
+    }
     setPayingAmount(num);
     setRemainingDueAmount(Number(selectedOrder?.due - num));
   };
@@ -344,9 +403,8 @@ const SalesList = () => {
     setSelectedDate(date);
   };
   const handleDateChangeForCreatePayment = (date) => {
-    setSelectedDateForPayment(date); // ✅ ইউজার নতুন তারিখ নিলে সেট হবে
+    setSelectedDateForPayment(date);
   };
-  console.log(selectedOrder);
   const renderTooltip = (props) => (
     <Tooltip id="pdf-tooltip" {...props}>
       Pdf
@@ -372,6 +430,7 @@ const SalesList = () => {
       Collapse
     </Tooltip>
   );
+  console.log(selectedOrder);
 
   return (
     <div>
@@ -1050,24 +1109,13 @@ const SalesList = () => {
         {/* details popup */}
         <div className="modal fade" id="sales-details-new">
           <div className="modal-dialog sales-details-modal">
-            <div className="modal-content">
+            <div className="modal-content" ref={salesDetailsRef}>
               <div className="page-wrapper details-blk">
                 <div className="content p-0">
                   <div className="page-header p-4 mb-0">
                     <div className="add-item d-flex">
                       <div className="page-title modal-datail">
-                        <h4>Sales Detail : SL0101</h4>
-                      </div>
-                      <div className="page-btn">
-                        <Link
-                          to="#"
-                          className="btn btn-added"
-                          data-bs-toggle="modal"
-                          data-bs-target="#add-payroll-new"
-                        >
-                          <PlusCircle className="me-2" />
-                          Add New Sales
-                        </Link>
+                        <h4>Sales Detail </h4>
                       </div>
                     </div>
                     <ul className="table-top-head">
@@ -1076,18 +1124,7 @@ const SalesList = () => {
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Pdf"
-                        >
-                          <i
-                            data-feather="edit"
-                            className="action-edit sales-action"
-                          />
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Pdf"
+                          onClick={() => handleDownloadPDF(salesDetailsRef)}
                         >
                           <ImageWithBasePath
                             src="assets/img/icons/pdf.svg"
@@ -1100,6 +1137,7 @@ const SalesList = () => {
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Excel"
+                          onClick={() => handleDownloadExcel(selectedOrder)}
                         >
                           <ImageWithBasePath
                             src="assets/img/icons/excel.svg"
@@ -1112,6 +1150,7 @@ const SalesList = () => {
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Print"
+                          onClick={() => handlePrint(salesDetailsRef)}
                         >
                           <i
                             data-feather="printer"
@@ -1136,196 +1175,40 @@ const SalesList = () => {
                             color: "#555",
                           }}
                         >
-                          <div className="sales-details-items d-flex">
-                            <div className="details-item">
-                              <h6>Customer Info</h6>
-                              <p>
-                                walk-in-customer
-                                <br />
-                                walk-in-customer@example.com
-                                <br />
-                                123456780
-                                <br />
-                                N45 , Dhaka
-                              </p>
-                            </div>
-                            <div className="details-item">
-                              <h6>Company Info</h6>
-                              <p>
-                                DGT
-                                <br />
-                                admin@example.com
-                                <br />
-                                6315996770
-                                <br />
-                                3618 Abia Martin Drive
-                              </p>
-                            </div>
-                            <div className="details-item">
-                              <h6>Invoice Info</h6>
-                              <p>
-                                Reference
-                                <br />
-                                Payment Status
-                                <br />
-                                Status
-                              </p>
-                            </div>
-                            <div className="details-item">
-                              <h5>
-                                <span>SL0101</span>Paid
-                                <br /> Completed
-                              </h5>
-                            </div>
-                          </div>
                           <h5 className="order-text">Order Summary</h5>
                           <div className="table-responsive no-pagination">
                             <table className="table  datanew">
                               <thead>
-                                <tr>
-                                  <th>Product</th>
+                                <tr className="text-center">
+                                  <th className="text-start">Product</th>
                                   <th>Qty</th>
-                                  <th>Purchase Price($)</th>
-                                  <th>Discount($)</th>
-                                  <th>Tax(%)</th>
-                                  <th>Tax Amount($)</th>
-                                  <th>Unit Cost($)</th>
-                                  <th>Total Cost(%)</th>
+                                  <th>Product Code</th>
+                                  <th>Discount</th>
+                                  <th>Tax </th>
+                                  <th>Total </th>
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr>
-                                  <td>
-                                    <div className="productimgname">
-                                      <Link
-                                        to="#"
-                                        className="product-img stock-img"
-                                      >
-                                        <ImageWithBasePath
-                                          src="assets/img/products/stock-img-02.png"
-                                          alt="product"
-                                        />
-                                      </Link>
-                                      <Link to="#">Nike Jordan</Link>
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="product-quantity">
-                                      <span className="quantity-btn">
-                                        +
-                                        <i
-                                          data-feather="plus-circle"
-                                          className="plus-circle"
-                                        />
-                                      </span>
-                                      <input
-                                        type="text"
-                                        className="quntity-input"
-                                        defaultValue={2}
-                                      />
-                                      <span className="quantity-btn">
-                                        <i
-                                          data-feather="minus-circle"
-                                          className="feather-search"
-                                        />
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td>2000</td>
-                                  <td>500</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>1500</td>
-                                </tr>
-                                <tr>
-                                  <td>
-                                    <div className="productimgname">
-                                      <Link
-                                        to="#"
-                                        className="product-img stock-img"
-                                      >
-                                        <ImageWithBasePath
-                                          src="assets/img/products/stock-img-03.png"
-                                          alt="product"
-                                        />
-                                      </Link>
-                                      <Link to="#">Apple Series 5 Watch</Link>
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="product-quantity">
-                                      <span className="quantity-btn">
-                                        +
-                                        <i
-                                          data-feather="plus-circle"
-                                          className="plus-circle"
-                                        />
-                                      </span>
-                                      <input
-                                        type="text"
-                                        className="quntity-input"
-                                        defaultValue={2}
-                                      />
-                                      <span className="quantity-btn">
-                                        <i
-                                          data-feather="minus-circle"
-                                          className="feather-search"
-                                        />
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td>3000</td>
-                                  <td>400</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>1700</td>
-                                </tr>
-                                <tr>
-                                  <td>
-                                    <div className="productimgname">
-                                      <Link
-                                        to="#"
-                                        className="product-img stock-img"
-                                      >
-                                        <ImageWithBasePath
-                                          src="assets/img/products/stock-img-05.png"
-                                          alt="product"
-                                        />
-                                      </Link>
-                                      <Link to="#">Lobar Handy</Link>
-                                    </div>
-                                  </td>
-                                  <td>
-                                    <div className="product-quantity">
-                                      <span className="quantity-btn">
-                                        +
-                                        <i
-                                          data-feather="plus-circle"
-                                          className="plus-circle"
-                                        />
-                                      </span>
-                                      <input
-                                        type="text"
-                                        className="quntity-input"
-                                        defaultValue={2}
-                                      />
-                                      <span className="quantity-btn">
-                                        <i
-                                          data-feather="minus-circle"
-                                          className="feather-search"
-                                        />
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td>2500</td>
-                                  <td>500</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>0.00</td>
-                                  <td>2000</td>
-                                </tr>
+                                {selectedOrder?.products?.map(
+                                  (product, index) => (
+                                    <tr key={index} className="text-center">
+                                      <td>
+                                        <div className="productimgname">
+                                          <Link to="#">
+                                            {product.productName}
+                                          </Link>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <p>{product.quantity}</p>
+                                      </td>
+                                      <td>{product.itemCode}</td>
+                                      <td>{product.discountAmount}</td>
+                                      <td>{product.taxAmount}</td>
+                                      <td>{product?.totalPrice}</td>
+                                    </tr>
+                                  )
+                                )}
                               </tbody>
                             </table>
                           </div>
@@ -1337,23 +1220,23 @@ const SalesList = () => {
                                 <ul>
                                   <li>
                                     <h4>Order Tax</h4>
-                                    <h5>$ 0.00</h5>
+                                    <h5>{selectedOrder?.totalTax}</h5>
                                   </li>
                                   <li>
                                     <h4>Discount</h4>
-                                    <h5>$ 0.00</h5>
+                                    <h5>{selectedOrder?.totalDiscount}</h5>
                                   </li>
                                   <li>
                                     <h4>Grand Total</h4>
-                                    <h5>$ 5200.00</h5>
+                                    <h5>{selectedOrder?.grandTotal}</h5>
                                   </li>
                                   <li>
                                     <h4>Paid</h4>
-                                    <h5>$ 5200.00</h5>
+                                    <h5>{selectedOrder?.payment}</h5>
                                   </li>
                                   <li>
                                     <h4>Due</h4>
-                                    <h5>$ 0.00</h5>
+                                    <h5>{selectedOrder?.due}</h5>
                                   </li>
                                 </ul>
                               </div>
@@ -1839,7 +1722,7 @@ const SalesList = () => {
                             name="due"
                             className="form-control text-center"
                             readOnly
-                            value={selectedOrder?.due}
+                            value={selectedOrder?.due ?? 0}
                           />
                         </div>
                       </div>
@@ -1853,8 +1736,10 @@ const SalesList = () => {
                             type="number"
                             name="payingamount"
                             className="form-control text-center"
-                            value={payingAmount}
-                            onChange={(e) => handlenextDue(e.target.value)}
+                            value={payingAmount ?? 0}
+                            onChange={(e) =>
+                              handlenextDue(e.target.value, selectedOrder?.due)
+                            }
                           />
                         </div>
                       </div>
@@ -1868,7 +1753,7 @@ const SalesList = () => {
                             type="number"
                             name="dueblance"
                             className="form-control text-center"
-                            value={remaingDueAmount}
+                            value={remaingDueAmount ?? 0}
                             readOnly
                           />
                         </div>
@@ -1882,6 +1767,8 @@ const SalesList = () => {
                           className="select"
                           options={paymenttype}
                           placeholder="Newest"
+                          value={method}
+                          onChange={(options) => setMethod(options)}
                         />
                       </div>
                     </div>

@@ -66,6 +66,7 @@ const {
   createPurchase,
   getAllPurchases,
 } = require("../controller/Purchase.controller");
+const { createPayment } = require("../controller/payment.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -129,5 +130,7 @@ router.delete("/user/:id", deleteUser);
 // order routes
 router.post("/order", createOrder);
 router.get("/order", getAllOrders);
+// payment api
+router.post("/payments", createPayment);
 
 module.exports = router;
