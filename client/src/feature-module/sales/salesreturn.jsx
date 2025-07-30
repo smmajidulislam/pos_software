@@ -1,19 +1,25 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import ImageWithBasePath from '../../core/img/imagewithbasebath'
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { ChevronUp, PlusCircle, RotateCcw, Sliders, StopCircle, User } from 'feather-icons-react/build/IconComponents';
-import { setToogleHeader } from '../../core/redux/action';
-import { useDispatch, useSelector } from 'react-redux';
-import { Filter, Zap } from 'react-feather';
-import Select from 'react-select';
-import Table from '../../core/pagination/datatable'
-import withReactContent from 'sweetalert2-react-content';
-import Swal from 'sweetalert2';
-import AddSalesReturns from '../../core/modals/sales/addsalesreturns';
-import EditSalesRetuens from '../../core/modals/sales/editsalesretuens';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import ImageWithBasePath from "../../core/img/imagewithbasebath";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  ChevronUp,
+  PlusCircle,
+  RotateCcw,
+  Sliders,
+  StopCircle,
+  User,
+} from "feather-icons-react/build/IconComponents";
+import { setToogleHeader } from "../../core/redux/action";
+import { useDispatch, useSelector } from "react-redux";
+import { Filter, Zap } from "react-feather";
+import Select from "react-select";
+import Table from "../../core/pagination/datatable";
+import withReactContent from "sweetalert2-react-content";
+import Swal from "sweetalert2";
+import AddSalesReturns from "../../core/modals/sales/addsalesreturns";
+import EditSalesRetuens from "../../core/modals/sales/editsalesretuens";
 const SalesReturn = () => {
-
   const dispatch = useDispatch();
   const data = useSelector((state) => state.toggle_header);
   const dataSource = useSelector((state) => state.salesreturns_data);
@@ -23,25 +29,25 @@ const SalesReturn = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
   const oldandlatestvalue = [
-    { value: 'date', label: 'Sort by Date' },
-    { value: 'newest', label: 'Newest' },
-    { value: 'oldest', label: 'Oldest' },
+    { value: "date", label: "Sort by Date" },
+    { value: "newest", label: "Newest" },
+    { value: "oldest", label: "Oldest" },
   ];
   const customer = [
-    { value: 'Choose Customer', label: 'Choose Customer' },
-    { value: 'Thomas', label: 'Thomas' },
-    { value: 'James', label: 'James' },
-    { value: 'Beverly', label: 'Beverly' },
+    { value: "Choose Customer", label: "Choose Customer" },
+    { value: "Thomas", label: "Thomas" },
+    { value: "James", label: "James" },
+    { value: "Beverly", label: "Beverly" },
   ];
   const status = [
-    { value: 'Choose Status', label: 'Choose Status' },
-    { value: 'Received', label: 'Received' },
-    { value: 'Pending', label: 'Pending' },
+    { value: "Choose Status", label: "Choose Status" },
+    { value: "Received", label: "Received" },
+    { value: "Pending", label: "Pending" },
   ];
   const paymentstatus = [
-    { value: 'Choose Payment Status', label: 'Choose Payment Status' },
-    { value: 'Unpaid', label: 'Unpaid' },
-    { value: 'Paids', label: 'Paids' },
+    { value: "Choose Payment Status", label: "Choose Payment Status" },
+    { value: "Unpaid", label: "Unpaid" },
+    { value: "Paids", label: "Paids" },
   ];
 
   const renderTooltip = (props) => (
@@ -68,9 +74,8 @@ const SalesReturn = () => {
     <Tooltip id="refresh-tooltip" {...props}>
       Collapse
     </Tooltip>
-  )
+  );
   const columns = [
-
     {
       title: "Product Name",
       dataIndex: "productname",
@@ -78,8 +83,9 @@ const SalesReturn = () => {
         <div className="productimgname">
           <Link to="#" className="product-img" />
           <ImageWithBasePath alt="img" src={record.img} />
-          <Link to="#" className='ms-2'>{text}</Link>
-
+          <Link to="#" className="ms-2">
+            {text}
+          </Link>
         </div>
       ),
       sorter: (a, b) => a.productname.length - b.productname.length,
@@ -146,50 +152,57 @@ const SalesReturn = () => {
       sorter: (a, b) => a.paymentstatus.length - b.paymentstatus.length,
     },
     {
-      title: 'Actions',
-      dataIndex: 'actions',
-      key: 'actions',
+      title: "Actions",
+      dataIndex: "actions",
+      key: "actions",
       render: () => (
         <td className="action-table-data">
           <div className="edit-delete-action">
-            <Link className="me-2 p-2" to="#" data-bs-toggle="modal" data-bs-target="#edit-sales-new">
+            <Link
+              className="me-2 p-2"
+              to="#"
+              data-bs-toggle="modal"
+              data-bs-target="#edit-sales-new"
+            >
               <i data-feather="edit" className="feather-edit"></i>
             </Link>
-            <Link className="confirm-text p-2" to="#"  >
-              <i data-feather="trash-2" className="feather-trash-2" onClick={showConfirmationAlert}></i>
+            <Link className="confirm-text p-2" to="#">
+              <i
+                data-feather="trash-2"
+                className="feather-trash-2"
+                onClick={showConfirmationAlert}
+              ></i>
             </Link>
           </div>
         </td>
-      )
+      ),
     },
-  ]
+  ];
   const MySwal = withReactContent(Swal);
 
   const showConfirmationAlert = () => {
     MySwal.fire({
-      title: 'Are you sure?',
-      text: 'You won\'t be able to revert this!',
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
       showCancelButton: true,
-      confirmButtonColor: '#00ff00',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonColor: '#ff0000',
-      cancelButtonText: 'Cancel',
+      confirmButtonColor: "#00ff00",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonColor: "#ff0000",
+      cancelButtonText: "Cancel",
     }).then((result) => {
       if (result.isConfirmed) {
-
         MySwal.fire({
-          title: 'Deleted!',
-          text: 'Your file has been deleted.',
+          title: "Deleted!",
+          text: "Your file has been deleted.",
           className: "btn btn-success",
-          confirmButtonText: 'OK',
+          confirmButtonText: "OK",
           customClass: {
-            confirmButton: 'btn btn-success',
+            confirmButton: "btn btn-success",
           },
         });
       } else {
         MySwal.close();
       }
-
     });
   };
   return (
@@ -207,20 +220,25 @@ const SalesReturn = () => {
               <li>
                 <OverlayTrigger placement="top" overlay={renderTooltip}>
                   <Link>
-                    <ImageWithBasePath src="assets/img/icons/pdf.svg" alt="img" />
+                    <ImageWithBasePath
+                      src="assets/img/icons/pdf.svg"
+                      alt="img"
+                    />
                   </Link>
                 </OverlayTrigger>
               </li>
               <li>
                 <OverlayTrigger placement="top" overlay={renderExcelTooltip}>
                   <Link data-bs-toggle="tooltip" data-bs-placement="top">
-                    <ImageWithBasePath src="assets/img/icons/excel.svg" alt="img" />
+                    <ImageWithBasePath
+                      src="assets/img/icons/excel.svg"
+                      alt="img"
+                    />
                   </Link>
                 </OverlayTrigger>
               </li>
               <li>
                 <OverlayTrigger placement="top" overlay={renderPrinterTooltip}>
-
                   <Link data-bs-toggle="tooltip" data-bs-placement="top">
                     <i data-feather="printer" className="feather-printer" />
                   </Link>
@@ -228,7 +246,6 @@ const SalesReturn = () => {
               </li>
               <li>
                 <OverlayTrigger placement="top" overlay={renderRefreshTooltip}>
-
                   <Link data-bs-toggle="tooltip" data-bs-placement="top">
                     <RotateCcw />
                   </Link>
@@ -236,13 +253,14 @@ const SalesReturn = () => {
               </li>
               <li>
                 <OverlayTrigger placement="top" overlay={renderCollapseTooltip}>
-
                   <Link
                     data-bs-toggle="tooltip"
                     data-bs-placement="top"
                     id="collapse-header"
                     className={data ? "active" : ""}
-                    onClick={() => { dispatch(setToogleHeader(!data)) }}
+                    onClick={() => {
+                      dispatch(setToogleHeader(!data));
+                    }}
                   >
                     <ChevronUp />
                   </Link>
@@ -278,13 +296,21 @@ const SalesReturn = () => {
                   </div>
                 </div>
                 <div className="search-path">
-                  <Link className={`btn btn-filter ${isFilterVisible ? "setclose" : ""}`} id="filter_search">
+                  <Link
+                    className={`btn btn-filter ${
+                      isFilterVisible ? "setclose" : ""
+                    }`}
+                    id="filter_search"
+                  >
                     <Filter
                       className="filter-icon"
                       onClick={toggleFilterVisibility}
                     />
                     <span onClick={toggleFilterVisibility}>
-                      <ImageWithBasePath src="assets/img/icons/closes.svg" alt="img" />
+                      <ImageWithBasePath
+                        src="assets/img/icons/closes.svg"
+                        alt="img"
+                      />
                     </span>
                   </Link>
                 </div>
@@ -299,9 +325,9 @@ const SalesReturn = () => {
               </div>
               {/* /Filter */}
               <div
-                className={`card${isFilterVisible ? ' visible' : ''}`}
+                className={`card${isFilterVisible ? " visible" : ""}`}
                 id="filter_inputs"
-                style={{ display: isFilterVisible ? 'block' : 'none' }}
+                style={{ display: isFilterVisible ? "block" : "none" }}
               >
                 <div className="card-body pb-0">
                   <div className="row">
@@ -329,7 +355,6 @@ const SalesReturn = () => {
                     </div>
                     <div className="col-lg-3 col-sm-6 col-12">
                       <div className="input-blocks">
-
                         <StopCircle className="info-img" />
 
                         <Select
@@ -343,7 +368,10 @@ const SalesReturn = () => {
                       <div className="input-blocks">
                         <Link className="btn btn-filters ms-auto">
                           {" "}
-                          <i data-feather="search" className="feather-search" />{" "}
+                          <i
+                            data-feather="search"
+                            className="feather-search"
+                          />{" "}
                           Search{" "}
                         </Link>
                       </div>
@@ -363,7 +391,7 @@ const SalesReturn = () => {
       <AddSalesReturns />
       <EditSalesRetuens />
     </div>
-  )
-}
+  );
+};
 
-export default SalesReturn
+export default SalesReturn;

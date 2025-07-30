@@ -20,7 +20,12 @@ export const paymentApi = createApi({
 
     // 🔹 Read All Payments
     getAllPayments: builder.query({
-      query: () => "/payments",
+      query: ({ orderId }) => {
+        let query = {};
+        if (orderId) query.orderId = orderId;
+        const queryString = new URLSearchParams(query).toString();
+        return `/payments${queryString ? `?${queryString}` : ""}`;
+      },
       providesTags: ["Payment"],
     }),
 

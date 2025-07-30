@@ -23,9 +23,14 @@ import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
 import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
 import {
   useCreateOrderMutation,
+  useDeleteOrderMutation,
   useGetOrdersQuery,
 } from "../../core/redux/api/orderApi/orderApi";
-import { useCreatePaymentMutation } from "../../core/redux/api/paymentApi/paymentApi";
+import {
+  useCreatePaymentMutation,
+  useDeletePaymentMutation,
+  useGetAllPaymentsQuery,
+} from "../../core/redux/api/paymentApi/paymentApi";
 import Swal from "sweetalert2";
 import {
   handlePrint,
@@ -74,7 +79,6 @@ const SalesList = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [search, setSearch] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateForPayment, setSelectedDateForPayment] = useState(dayjs());
   const [duePayment, setDuePayment] = useState(0);
   const [createOrder] = useCreateOrderMutation();
@@ -155,6 +159,16 @@ const SalesList = () => {
   const { data: usersList, isLoading: usersLoading } = useGetUsersQuery({
     role: "customer",
   });
+  const { data: singelPaymentHistory } = useGetAllPaymentsQuery(
+    {
+      orderId: selectedOrder?._id,
+    },
+    {
+      skip: !selectedOrder?._id,
+    }
+  );
+  const [deletePayment] = useDeletePaymentMutation();
+  const [deleteOrder] = useDeleteOrderMutation();
 
   const { data: orderList } = useGetOrdersQuery(
     {
@@ -352,6 +366,9 @@ const SalesList = () => {
     setPayingAmount(num);
     setRemainingDueAmount(Number(selectedOrder?.due - num));
   };
+  const handleDeletePayment = async (id) => {
+    await deletePayment(id);
+  };
 
   useEffect(() => {
     if (supplierList) {
@@ -389,21 +406,17 @@ const SalesList = () => {
     { value: "Fruits", label: "Fruits" },
   ];
 
-  const statusupdate = [
-    { value: "Supplier", label: "Choose" },
-    { value: "Completed", label: "Completed" },
-    { value: "InProgress", label: "InProgress" },
-  ];
   const paymenttype = [
     { value: "Choose", label: "Choose" },
     { value: "Cash", label: "Cash" },
     { value: "Online", label: "Online" },
   ];
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
+
   const handleDateChangeForCreatePayment = (date) => {
     setSelectedDateForPayment(date);
+  };
+  const handleDeleteOrder = async (id) => {
+    await deleteOrder(id);
   };
   const renderTooltip = (props) => (
     <Tooltip id="pdf-tooltip" {...props}>
@@ -430,7 +443,6 @@ const SalesList = () => {
       Collapse
     </Tooltip>
   );
-  console.log(selectedOrder);
 
   return (
     <div>
@@ -726,18 +738,7 @@ const SalesList = () => {
                                 Sale Detail
                               </Link>
                             </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item"
-                                data-bs-toggle="modal"
-                                data-bs-target="#edit-sales-new"
-                                onClick={() => setSelectedOrder(item)}
-                              >
-                                <i data-feather="edit" className="info-img" />
-                                Edit Sale
-                              </Link>
-                            </li>
+
                             <li>
                               <Link
                                 to="#"
@@ -768,24 +769,12 @@ const SalesList = () => {
                                 Create Payment
                               </Link>
                             </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item"
-                                onClick={() => setSelectedOrder(item)}
-                              >
-                                <i
-                                  data-feather="download"
-                                  className="info-img"
-                                />
-                                Download pdf
-                              </Link>
-                            </li>
+
                             <li>
                               <Link
                                 to="#"
                                 className="dropdown-item confirm-text mb-0"
-                                onClick={() => setSelectedOrder(item)}
+                                onClick={() => handleDeleteOrder(item?._id)}
                               >
                                 <i
                                   data-feather="trash-2"
@@ -1137,7 +1126,20 @@ const SalesList = () => {
                           data-bs-toggle="tooltip"
                           data-bs-placement="top"
                           title="Excel"
-                          onClick={() => handleDownloadExcel(selectedOrder)}
+                          onClick={() =>
+                            handleDownloadExcel({
+                              data: selectedOrder?.products?.map((product) => ({
+                                Product: product.productName,
+                                Quantity: product.quantity,
+                                Code: product.itemCode,
+                                Discount: product.discountAmount,
+                                Tax: product.taxAmount,
+                                Total: product.totalPrice,
+                              })),
+                              fileName: `sales-details-${selectedOrder.invoiceNumber}.xlsx`,
+                              sheetName: "Sales Info",
+                            })
+                          }
                         >
                           <ImageWithBasePath
                             src="assets/img/icons/excel.svg"
@@ -1252,335 +1254,7 @@ const SalesList = () => {
           </div>
         </div>
         {/* /details popup */}
-        {/* edit popup */}
-        <div className="modal fade" id="edit-sales-new">
-          <div className="modal-dialog edit-sales-modal">
-            <div className="modal-content">
-              <div className="page-wrapper p-0 m-0">
-                <div className="content p-0">
-                  <div className="page-header p-4 mb-0">
-                    <div className="add-item new-sale-items d-flex">
-                      <div className="page-title">
-                        <h4>Edit Sales</h4>
-                      </div>
-                      <button
-                        type="button"
-                        className="close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"
-                      >
-                        <span aria-hidden="true">×</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div className="card">
-                    <div className="card-body">
-                      <form>
-                        <div className="row">
-                          <div className="col-lg-4 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Customer</label>
-                              <div className="row">
-                                <div className="col-lg-10 col-sm-10 col-10">
-                                  <Select
-                                    className="select"
-                                    options={customer}
-                                    placeholder="Newest"
-                                  />
-                                </div>
-                                <div className="col-lg-2 col-sm-2 col-2 ps-0">
-                                  <div className="add-icon">
-                                    <Link to="#" className="choose-add">
-                                      <PlusCircle className="plus" />
-                                    </Link>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-4 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Purchase Date</label>
-                              <div className="input-groupicon calender-input">
-                                <DatePicker
-                                  selected={selectedDate}
-                                  onChange={handleDateChange}
-                                  type="date"
-                                  className="filterdatepicker"
-                                  dateFormat="dd-MM-yyyy"
-                                  placeholder="Choose Date"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-4 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Supplier</label>
-                              <Select
-                                className="select"
-                                options={suppliername}
-                                placeholder="Newest"
-                              />
-                            </div>
-                          </div>
-                          <div className="col-lg-12 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Product Name</label>
-                              <div className="input-groupicon select-code">
-                                <input
-                                  type="text"
-                                  placeholder="Please type product code and select"
-                                />
-                                <div className="addonset">
-                                  <ImageWithBasePath
-                                    src="assets/img/icons/scanners.svg"
-                                    alt="img"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="table-responsive no-pagination">
-                          <table className="table  datanew">
-                            <thead>
-                              <tr>
-                                <th>Product</th>
-                                <th>Qty</th>
-                                <th>Purchase Price($)</th>
-                                <th>Discount($)</th>
-                                <th>Tax(%)</th>
-                                <th>Tax Amount($)</th>
-                                <th>Unit Cost($)</th>
-                                <th>Total Cost(%)</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td>
-                                  <div className="productimgname">
-                                    <Link
-                                      to="#"
-                                      className="product-img stock-img"
-                                    >
-                                      <ImageWithBasePath
-                                        src="assets/img/products/stock-img-02.png"
-                                        alt="product"
-                                      />
-                                    </Link>
-                                    <Link to="#">Nike Jordan</Link>
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="product-quantity">
-                                    <span className="quantity-btn">
-                                      +
-                                      <i
-                                        data-feather="plus-circle"
-                                        className="plus-circle"
-                                      />
-                                    </span>
-                                    <input
-                                      type="text"
-                                      className="quntity-input"
-                                      defaultValue={2}
-                                    />
-                                    <span className="quantity-btn">
-                                      <i
-                                        data-feather="minus-circle"
-                                        className="feather-search"
-                                      />
-                                    </span>
-                                  </div>
-                                </td>
-                                <td>2000</td>
-                                <td>500</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>1500</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div className="productimgname">
-                                    <Link
-                                      to="#"
-                                      className="product-img stock-img"
-                                    >
-                                      <ImageWithBasePath
-                                        src="assets/img/products/stock-img-03.png"
-                                        alt="product"
-                                      />
-                                    </Link>
-                                    <Link to="#">Apple Series 5 Watch</Link>
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="product-quantity">
-                                    <span className="quantity-btn">
-                                      +
-                                      <i
-                                        data-feather="plus-circle"
-                                        className="plus-circle"
-                                      />
-                                    </span>
-                                    <input
-                                      type="text"
-                                      className="quntity-input"
-                                      defaultValue={2}
-                                    />
-                                    <span className="quantity-btn">
-                                      <i
-                                        data-feather="minus-circle"
-                                        className="feather-search"
-                                      />
-                                    </span>
-                                  </div>
-                                </td>
-                                <td>3000</td>
-                                <td>400</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>1700</td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  <div className="productimgname">
-                                    <Link
-                                      to="#"
-                                      className="product-img stock-img"
-                                    >
-                                      <ImageWithBasePath
-                                        src="assets/img/products/stock-img-05.png"
-                                        alt="product"
-                                      />
-                                    </Link>
-                                    <Link to="#">Lobar Handy</Link>
-                                  </div>
-                                </td>
-                                <td>
-                                  <div className="product-quantity">
-                                    <span className="quantity-btn">
-                                      +
-                                      <i
-                                        data-feather="plus-circle"
-                                        className="plus-circle"
-                                      />
-                                    </span>
-                                    <input
-                                      type="text"
-                                      className="quntity-input"
-                                      defaultValue={2}
-                                    />
-                                    <span className="quantity-btn">
-                                      <i
-                                        data-feather="minus-circle"
-                                        className="feather-search"
-                                      />
-                                    </span>
-                                  </div>
-                                </td>
-                                <td>2500</td>
-                                <td>500</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>0.00</td>
-                                <td>2000</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="row">
-                          <div className="col-lg-6 ms-auto">
-                            <div className="total-order w-100 max-widthauto m-auto mb-4">
-                              <ul>
-                                <li>
-                                  <h4>Order Tax</h4>
-                                  <h5>$ 0.00</h5>
-                                </li>
-                                <li>
-                                  <h4>Discount</h4>
-                                  <h5>$ 0.00</h5>
-                                </li>
-                                <li>
-                                  <h4>Shipping</h4>
-                                  <h5>$ 0.00</h5>
-                                </li>
-                                <li>
-                                  <h4>Grand Total</h4>
-                                  <h5>$5200.00</h5>
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="row">
-                          <div className="col-lg-3 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Order Tax</label>
-                              <div className="input-groupicon select-code">
-                                <input type="text" placeholder={0} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-3 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Discount</label>
-                              <div className="input-groupicon select-code">
-                                <input type="text" placeholder={0} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-3 col-sm-6 col-12">
-                            <div className="input-blocks">
-                              <label>Shipping</label>
-                              <div className="input-groupicon select-code">
-                                <input type="text" placeholder={0} />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="col-lg-3 col-sm-6 col-12">
-                            <div className="input-blocks mb-5">
-                              <label>Status</label>
-                              <Select
-                                className="select"
-                                options={statusupdate}
-                                placeholder="Newest"
-                              />
-                            </div>
-                          </div>
-                          <div className="col-lg-12">
-                            <div className="input-blocks">
-                              <label>Notes</label>
-                              <textarea
-                                className="form-control"
-                                defaultValue={""}
-                              />
-                            </div>
-                          </div>
-                          <div className="col-lg-12 text-end">
-                            <button
-                              type="button"
-                              className="btn btn-cancel add-cancel me-3"
-                              data-bs-dismiss="modal"
-                            >
-                              Cancel
-                            </button>
-                            <Link to="#" className="btn btn-submit add-sale">
-                              Submit
-                            </Link>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* /edit popup */}
+
         {/* show payment Modal */}
         <div
           className="modal fade"
@@ -1615,46 +1289,43 @@ const SalesList = () => {
                               <thead>
                                 <tr>
                                   <th>Date</th>
-                                  <th>Reference</th>
                                   <th>Amount</th>
                                   <th>Paid By</th>
                                   <th className="no-sort">Action</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr>
-                                  <td>19 Jan 2023</td>
-                                  <td>INV/SL0101</td>
-                                  <td>$1500</td>
-                                  <td>Cash</td>
-                                  <td className="action-table-data">
-                                    <div className="edit-delete-action">
-                                      <Link className="me-3 p-2" to="#">
-                                        <i
-                                          data-feather="printer"
-                                          className="feather-rotate-ccw"
-                                        />
-                                      </Link>
-                                      <Link
-                                        className="me-3 p-2"
-                                        to="#"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#editpayment"
-                                      >
-                                        <i
-                                          data-feather="edit"
-                                          className="feather-edit"
-                                        />
-                                      </Link>
-                                      <Link className="confirm-text p-2" to="#">
-                                        <i
-                                          data-feather="trash-2"
-                                          className="feather-trash-2"
-                                        />
-                                      </Link>
-                                    </div>
-                                  </td>
-                                </tr>
+                                {singelPaymentHistory?.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>
+                                      {new Date(
+                                        item.createdAt
+                                      ).toLocaleDateString("en-GB", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                      })}
+                                    </td>
+
+                                    <td>{item?.paymentAmount}</td>
+                                    <td>{item?.method}</td>
+                                    <td className="action-table-data">
+                                      <div className="edit-delete-action">
+                                        <p
+                                          className="confirm-text p-2"
+                                          onClick={() =>
+                                            handleDeletePayment(item?._id)
+                                          }
+                                        >
+                                          <i
+                                            data-feather="trash-2"
+                                            className="feather-trash-2"
+                                          />
+                                        </p>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           </div>

@@ -1,13 +1,16 @@
 import html2pdf from "html2pdf.js";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-const handlePrint = (salesDetailsRef) => {
-  const printContent = salesDetailsRef.current;
+const handlePrint = (contentRef, title = "Print Preview") => {
+  const content = contentRef.current;
+
+  if (!content) return;
+
   const WindowPrt = window.open("", "", "width=900,height=650");
   WindowPrt.document.write(`
     <html>
       <head>
-        <title>Sales Detail</title>
+        <title>${title}</title>
         <style>
           body { font-family: Arial; margin: 20px; }
           table { border-collapse: collapse; width: 100%; }
@@ -16,7 +19,7 @@ const handlePrint = (salesDetailsRef) => {
         </style>
       </head>
       <body>
-        ${printContent.innerHTML}
+        ${content.innerHTML}
       </body>
     </html>
   `);
@@ -26,23 +29,32 @@ const handlePrint = (salesDetailsRef) => {
   WindowPrt.close();
 };
 
-const handleDownloadPDF = (salesDetailsRef) => {
-  const element = salesDetailsRef.current;
-  html2pdf().from(element).save("sales-details.pdf");
+const handleDownloadPDF = (contentRef, fileName = "document.pdf") => {
+  const element = contentRef.current;
+  if (!element) return;
+
+  html2pdf()
+    .from(element)
+    .set({
+      margin: 10,
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    })
+    .save();
 };
 
-const handleDownloadExcel = (selectedOrder) => {
-  const data = selectedOrder?.products?.map((product) => ({
-    Product: product.productName,
-    Quantity: product.quantity,
-    Code: product.itemCode,
-    Discount: product.discountAmount,
-    Tax: product.taxAmount,
-    Total: product.totalPrice,
-  }));
+const handleDownloadExcel = ({
+  data,
+  fileName = "data.xlsx",
+  sheetName = "Sheet1",
+}) => {
+  if (!data || !data.length) return;
+
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Sales Details");
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   const excelBuffer = XLSX.write(workbook, {
     bookType: "xlsx",
     type: "array",
@@ -50,7 +62,7 @@ const handleDownloadExcel = (selectedOrder) => {
   const blob = new Blob([excelBuffer], {
     type: "application/octet-stream",
   });
-  saveAs(blob, "sales-details.xlsx");
+  saveAs(blob, fileName);
 };
 
 export { handlePrint, handleDownloadPDF, handleDownloadExcel };

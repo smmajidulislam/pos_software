@@ -5,9 +5,21 @@ import { Link } from "react-router-dom";
 import { Filter, Sliders, StopCircle, User, Calendar } from "react-feather";
 import Select from "react-select";
 import DateRangePicker from "react-bootstrap-daterangepicker";
+import { useGetSellInvoicesQuery } from "../../core/redux/api/sellsInvoice/sellInvoice";
+import { usePos } from "../../hooks/PosProvider";
 
 const Invoicereport = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const { pos } = usePos();
+  const { data: invoiceData } = useGetSellInvoicesQuery(
+    {
+      pos: pos?._id,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
@@ -137,16 +149,6 @@ const Invoicereport = () => {
                   <div className="col-lg-3 col-sm-6 col-12">
                     <div className="input-blocks">
                       <div className="position-relative daterange-wraper">
-                        {/* <input
-                          type="text"
-                          className="form-control"
-                          name="datetimes"
-                          placeholder="From Date - To Date"
-                        />
-                        <i
-                          data-feather="calendar"
-                          className="feather-14 info-img"
-                        /> */}
                         <Calendar className="feather-14 info-img" />
 
                         <DateRangePicker initialSettings={initialSettings}>
@@ -178,13 +180,7 @@ const Invoicereport = () => {
             <div className="table-responsive">
               <table className="table  datanew">
                 <thead>
-                  <tr>
-                    <th className="no-sort">
-                      <label className="checkboxs">
-                        <input type="checkbox" id="select-all" />
-                        <span className="checkmarks" />
-                      </label>
-                    </th>
+                  <tr className="text-center">
                     <th>Invoice No</th>
                     <th>Customer</th>
                     <th>Due Date</th>
@@ -195,176 +191,21 @@ const Invoicereport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV001</td>
-                    <td>Thomas</td>
-                    <td>19 Jan 2023</td>
-                    <td>$1000</td>
-                    <td>$1000</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV002</td>
-                    <td>Rose</td>
-                    <td>25 Jan 2023</td>
-                    <td>$1500</td>
-                    <td>$0.00</td>
-                    <td>$1500</td>
-                    <td>
-                      <span className="badge badge-linedanger">Unpaid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV003</td>
-                    <td>Benjamin</td>
-                    <td>05 Feb 2023</td>
-                    <td>$1800</td>
-                    <td>$1800</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV004</td>
-                    <td>Kaitlin</td>
-                    <td>15 Feb 2023</td>
-                    <td>$2000</td>
-                    <td>$1000</td>
-                    <td>$1000</td>
-                    <td>
-                      <span className="badge badges-warning">Overdue</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV005</td>
-                    <td>Lilly</td>
-                    <td>18 Mar 2023</td>
-                    <td>$800</td>
-                    <td>$800</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV006</td>
-                    <td>Freda</td>
-                    <td>24 Mar 2023</td>
-                    <td>$750</td>
-                    <td>$0.00</td>
-                    <td>$750</td>
-                    <td>
-                      <span className="badge badge-linedanger">Unpaid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV007</td>
-                    <td>Alwin</td>
-                    <td>12 Apr 2023</td>
-                    <td>$1300</td>
-                    <td>$1300</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV008</td>
-                    <td>Maybelle</td>
-                    <td>24 Apr 2023</td>
-                    <td>$1100</td>
-                    <td>$1100</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV009</td>
-                    <td>Ellen</td>
-                    <td>03 May 2023</td>
-                    <td>$2300</td>
-                    <td>$2300</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>INV010</td>
-                    <td>Grace</td>
-                    <td>29 May 2023</td>
-                    <td>$1700</td>
-                    <td>$1700</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
+                  {invoiceData?.map((item, index) => (
+                    <tr key={index} className="text-center">
+                      <td>{item?.invoiceNo}</td>
+                      <td>{item?.customer}</td>
+                      <td>{item?.dueDate}</td>
+                      <td>{item?.amount}</td>
+                      <td>{item?.paid}</td>
+                      <td>{item?.due}</td>
+                      <td>
+                        <span className="badge badge-linesuccess">
+                          {item?.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

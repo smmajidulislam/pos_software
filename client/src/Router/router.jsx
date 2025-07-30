@@ -17,13 +17,7 @@ const AllRoutes = () => {
   const HeaderLayout = () => (
     <div className={`main-wrapper ${data ? "header-collapse" : ""}`}>
       <Header />
-      {/* {layoutStyles == "collapsed" ? (
-        <CollapsedSidebar />
-      ) : layoutStyles == "horizontal" ? (
-        <HorizontalSidebar />
-      ) : (
-        <Sidebar />
-      )} */}
+
       <Sidebar />
       <Outlet />
       <ThemeSettings />

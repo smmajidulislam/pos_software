@@ -61,12 +61,23 @@ const {
   updateUser,
   deleteUser,
 } = require("../controller/user.controller");
-const { createOrder, getAllOrders } = require("../controller/order.controller");
+const {
+  createOrder,
+  getAllOrders,
+  deleteOrder,
+} = require("../controller/order.controller");
 const {
   createPurchase,
   getAllPurchases,
 } = require("../controller/Purchase.controller");
-const { createPayment } = require("../controller/payment.controller");
+const {
+  createPayment,
+  getAllPayments,
+  getPaymentById,
+  deletePayment,
+} = require("../controller/payment.controller");
+const { getSellInvoice } = require("../controller/paymentInvoice.controller");
+const { getHomePageData } = require("../controller/homepageData.comtroller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -130,7 +141,16 @@ router.delete("/user/:id", deleteUser);
 // order routes
 router.post("/order", createOrder);
 router.get("/order", getAllOrders);
+router.delete("/order/:id", deleteOrder);
 // payment api
 router.post("/payments", createPayment);
+router.get("/payments", getAllPayments);
+router.get("/payments/:id", getPaymentById);
+router.delete("/payments/:id", deletePayment);
+
+// invoice api
+router.get("/or-sell-invoices", getSellInvoice);
+// DashBord Data
+router.get("/dashbord-data", getHomePageData);
 
 module.exports = router;

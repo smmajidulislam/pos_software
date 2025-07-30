@@ -37,14 +37,16 @@ const createPayment = async (req, res) => {
 
 // ✅ Get all payments
 const getAllPayments = async (req, res) => {
+  const { orderId } = req.query;
   try {
-    const payments = await Payment.find()
+    const payments = await Payment.find({ orderId })
       .populate("orderId")
       .populate("pos")
       .sort({ createdAt: -1 });
 
     res.status(200).json(payments);
   } catch (error) {
+    console.log(error);
     res
       .status(500)
       .json({ message: "Failed to get payments", error: error.message });

@@ -9,14 +9,15 @@ import Chart from "react-apexcharts";
 import { Link } from "react-router-dom";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import { ArrowRight } from "react-feather";
-import { all_routes } from "../../Router/all_routes";
 import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
 import { useAuth } from "../../hooks/AuthProvider";
+import { useGetHomepageQuery } from "../../core/redux/api/homepageApi/homepageApi";
 
 const Dashboard = () => {
-  const route = all_routes;
-  const [chartOptions] = useState({
+  const { data: homepageData, isLoading: homepageLoading } =
+    useGetHomepageQuery();
+  const [chartOptions, setChartOptions] = useState({
     series: [
       {
         name: "Sales",
@@ -82,6 +83,7 @@ const Dashboard = () => {
       opacity: 1,
     },
   });
+  console.log(homepageData);
   const MySwal = withReactContent(Swal);
   const showConfirmationAlert = () => {
     MySwal.fire({
@@ -114,6 +116,66 @@ const Dashboard = () => {
       window.location.href = "/signin-3";
     }
   }, [user, loading]);
+  useEffect(() => {
+    if (!homepageLoading && homepageData?.data?.[7]) {
+      const { labels, sales, purchases } = homepageData.data[7];
+
+      setChartOptions({
+        series: [
+          {
+            name: "Sales",
+            data: sales || [],
+          },
+          {
+            name: "Purchase",
+            data: purchases.map((p) => -Math.abs(p)) || [], // negative value
+          },
+        ],
+        options: {
+          colors: ["#28C76F", "#EA5455"],
+          chart: {
+            type: "bar",
+            height: 320,
+            stacked: true,
+            zoom: { enabled: true },
+          },
+          responsive: [
+            {
+              breakpoint: 280,
+              options: {
+                legend: {
+                  position: "bottom",
+                  offsetY: 0,
+                },
+              },
+            },
+          ],
+          plotOptions: {
+            bar: {
+              horizontal: false,
+              borderRadius: 4,
+              borderRadiusApplication: "end",
+              borderRadiusWhenStacked: "all",
+              columnWidth: "20%",
+            },
+          },
+          dataLabels: { enabled: false },
+          yaxis: {
+            min: Math.min(...purchases.map((p) => -Math.abs(p)), 0),
+            max: Math.max(...sales, 300),
+            tickAmount: 5,
+          },
+          xaxis: {
+            categories: labels || [],
+          },
+          legend: { show: false },
+          fill: {
+            opacity: 1,
+          },
+        },
+      });
+    }
+  }, [homepageData, homepageLoading]);
   return (
     <div>
       <div className="page-wrapper">
@@ -131,7 +193,19 @@ const Dashboard = () => {
                 </div>
                 <div className="dash-widgetcontent">
                   <h5>
-                    <CountUp start={0} end={307144} duration={3} prefix="$" />
+                    {!homepageLoading && homepageData ? (
+                      <CountUp
+                        start={0}
+                        end={
+                          homepageData.data.find(
+                            (item) => item.totalsPurchaceAndDue
+                          )?.totalsPurchaceAndDue?.totalDue || 0
+                        }
+                        duration={3}
+                      />
+                    ) : (
+                      "0"
+                    )}
                   </h5>
                   <h6>Total Purchase Due</h6>
                 </div>
@@ -149,12 +223,18 @@ const Dashboard = () => {
                 </div>
                 <div className="dash-widgetcontent">
                   <h5>
-                    $
-                    <CountUp
-                      start={0}
-                      end={4385}
-                      duration={3} // Duration in seconds
-                    />
+                    {!homepageLoading && homepageData ? (
+                      <CountUp
+                        start={0}
+                        end={
+                          homepageData.data.find((item) => item.totalSalesDue)
+                            ?.totalSalesDue || 0
+                        }
+                        duration={3}
+                      />
+                    ) : (
+                      "0"
+                    )}
                   </h5>
                   <h6>Total Sales Due</h6>
                 </div>
@@ -172,13 +252,18 @@ const Dashboard = () => {
                 </div>
                 <div className="dash-widgetcontent">
                   <h5>
-                    $
-                    <CountUp
-                      start={0}
-                      end={385656.5}
-                      duration={3} // Duration in seconds
-                      decimals={1}
-                    />
+                    {!homepageLoading && homepageData ? (
+                      <CountUp
+                        start={0}
+                        end={
+                          homepageData.data.find((item) => item.totalsales)
+                            ?.totalsales || 0
+                        }
+                        duration={3}
+                      />
+                    ) : (
+                      "0"
+                    )}
                   </h5>
                   <h6>Total Sale Amount</h6>
                 </div>
@@ -196,12 +281,18 @@ const Dashboard = () => {
                 </div>
                 <div className="dash-widgetcontent">
                   <h5>
-                    $
-                    <CountUp
-                      start={0}
-                      end={40000}
-                      duration={3} // Duration in seconds
-                    />
+                    {!homepageLoading && homepageData ? (
+                      <CountUp
+                        start={0}
+                        end={
+                          homepageData.data.find((item) => item.totalsexpense)
+                            ?.totalsexpense
+                        }
+                        duration={3}
+                      />
+                    ) : (
+                      "0"
+                    )}
                   </h5>
                   <h6>Total Expense Amount</h6>
                 </div>
@@ -210,7 +301,13 @@ const Dashboard = () => {
             <div className="col-xl-3 col-sm-6 col-12 d-flex">
               <div className="dash-count">
                 <div className="dash-counts">
-                  <h4>100</h4>
+                  <h4>
+                    {!homepageLoading && homepageData
+                      ? homepageData.data.find(
+                          (item) => item.customer !== undefined
+                        )?.customer || "0"
+                      : "0"}
+                  </h4>
                   <h5>Customers</h5>
                 </div>
                 <div className="dash-imgs">
@@ -221,7 +318,14 @@ const Dashboard = () => {
             <div className="col-xl-3 col-sm-6 col-12 d-flex">
               <div className="dash-count das1">
                 <div className="dash-counts">
-                  <h4>110</h4>
+                  <h4>
+                    {" "}
+                    {!homepageLoading && homepageData
+                      ? homepageData.data.find(
+                          (item) => item.supplier !== undefined
+                        )?.supplier || "0"
+                      : "0"}
+                  </h4>
                   <h5>Suppliers</h5>
                 </div>
                 <div className="dash-imgs">
@@ -232,7 +336,13 @@ const Dashboard = () => {
             <div className="col-xl-3 col-sm-6 col-12 d-flex">
               <div className="dash-count das2">
                 <div className="dash-counts">
-                  <h4>150</h4>
+                  <h4>
+                    {!homepageLoading && homepageData
+                      ? homepageData.data.find(
+                          (item) => item.purchaseInvoice !== undefined
+                        )?.purchaseInvoice || "0"
+                      : "0"}
+                  </h4>
                   <h5>Purchase Invoice</h5>
                 </div>
                 <div className="dash-imgs">
@@ -247,7 +357,14 @@ const Dashboard = () => {
             <div className="col-xl-3 col-sm-6 col-12 d-flex">
               <div className="dash-count das3">
                 <div className="dash-counts">
-                  <h4>170</h4>
+                  <h4>
+                    {" "}
+                    {!homepageLoading && homepageData
+                      ? homepageData.data.find(
+                          (item) => item.salesInvoice !== undefined
+                        )?.salesInvoice || "0"
+                      : "0"}
+                  </h4>
                   <h5>Sales Invoice</h5>
                 </div>
                 <div className="dash-imgs">
@@ -340,74 +457,26 @@ const Dashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td>1</td>
-                          <td className="productimgname">
-                            <Link
-                              to={route.productlist}
-                              className="product-img"
-                            >
-                              <ImageWithBasePath
-                                src="assets/img/products/stock-img-01.png"
-                                alt="product"
-                              />
-                            </Link>
-                            <Link to={route.productlist}>
-                              Lenevo 3rd Generation
-                            </Link>
-                          </td>
-                          <td>$12500</td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td className="productimgname">
-                            <Link
-                              to={route.productlist}
-                              className="product-img"
-                            >
-                              <ImageWithBasePath
-                                src="assets/img/products/stock-img-06.png"
-                                alt="product"
-                              />
-                            </Link>
-                            <Link to={route.productlist}>Bold V3.2</Link>
-                          </td>
-                          <td>$1600</td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td className="productimgname">
-                            <Link
-                              to={route.productlist}
-                              className="product-img"
-                            >
-                              <ImageWithBasePath
-                                src="assets/img/products/stock-img-02.png"
-                                alt="product"
-                              />
-                            </Link>
-                            <Link to={route.productlist}>Nike Jordan</Link>
-                          </td>
-                          <td>$2000</td>
-                        </tr>
-                        <tr>
-                          <td>4</td>
-                          <td className="productimgname">
-                            <Link
-                              to={route.productlist}
-                              className="product-img"
-                            >
-                              <ImageWithBasePath
-                                src="assets/img/products/stock-img-03.png"
-                                alt="product"
-                              />
-                            </Link>
-                            <Link to={route.productlist}>
-                              Apple Series 5 Watch
-                            </Link>
-                          </td>
-                          <td>$800</td>
-                        </tr>
+                        {!homepageLoading &&
+                          homepageData?.data &&
+                          homepageData.data
+                            .find((item) => item.recenctProduct)
+                            ?.recenctProduct?.map((item, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td className="productimgname">
+                                  <Link className="product-img">
+                                    <ImageWithBasePath
+                                      src={item.images[0]?.url}
+                                      alt="product"
+                                      isBase={true}
+                                    />
+                                  </Link>
+                                  <Link>{item.productName}</Link>
+                                </td>
+                                <td>{item.price || "N/A"}</td>
+                              </tr>
+                            ))}
                       </tbody>
                     </table>
                   </div>
@@ -424,12 +493,6 @@ const Dashboard = () => {
                 <table className="table dashboard-expired-products">
                   <thead>
                     <tr>
-                      <th className="no-sort">
-                        <label className="checkboxs">
-                          <input type="checkbox" id="select-all" />
-                          <span className="checkmarks" />
-                        </label>
-                      </th>
                       <th>Product</th>
                       <th>SKU</th>
                       <th>Manufactured Date</th>
@@ -438,216 +501,70 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>
-                        <div className="productimgname">
-                          <Link to="#" className="product-img stock-img">
-                            <ImageWithBasePath
-                              src="assets/img/products/expire-product-01.png"
-                              alt="product"
-                            />
-                          </Link>
-                          <Link to="#">Red Premium Handy </Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Link to="#">PT006</Link>
-                      </td>
-                      <td>17 Jan 2023</td>
-                      <td>29 Mar 2023</td>
-                      <td className="action-table-data">
-                        <div className="edit-delete-action">
-                          <Link className="me-2 p-2" to="#">
-                            <i data-feather="edit" className="feather-edit" />
-                          </Link>
-                          <Link
-                            className=" confirm-text p-2"
-                            to="#"
-                            onClick={showConfirmationAlert}
-                          >
-                            <i
-                              data-feather="trash-2"
-                              className="feather-trash-2"
-                            />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>
-                        <div className="productimgname">
-                          <Link to="#" className="product-img stock-img">
-                            <ImageWithBasePath
-                              src="assets/img/products/expire-product-02.png"
-                              alt="product"
-                            />
-                          </Link>
-                          <Link to="#">Iphone 14 Pro</Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Link to="#">PT007</Link>
-                      </td>
-                      <td>22 Feb 2023</td>
-                      <td>04 Apr 2023</td>
-                      <td className="action-table-data">
-                        <div className="edit-delete-action">
-                          <Link className="me-2 p-2" to="#">
-                            <i data-feather="edit" className="feather-edit" />
-                          </Link>
-                          <Link
-                            className="confirm-text p-2"
-                            to="#"
-                            onClick={showConfirmationAlert}
-                          >
-                            <i
-                              data-feather="trash-2"
-                              className="feather-trash-2"
-                            />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>
-                        <div className="productimgname">
-                          <Link to="#" className="product-img stock-img">
-                            <ImageWithBasePath
-                              src="assets/img/products/expire-product-03.png"
-                              alt="product"
-                            />
-                          </Link>
-                          <Link to="#">Black Slim 200 </Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Link to="#">PT008</Link>
-                      </td>
-                      <td>18 Mar 2023</td>
-                      <td>13 May 2023</td>
-                      <td className="action-table-data">
-                        <div className="edit-delete-action">
-                          <Link className="me-2 p-2" to="#">
-                            <i data-feather="edit" className="feather-edit" />
-                          </Link>
-                          <Link
-                            className=" confirm-text p-2"
-                            to="#"
-                            onClick={showConfirmationAlert}
-                          >
-                            <i
-                              data-feather="trash-2"
-                              className="feather-trash-2"
-                            />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>
-                        <div className="productimgname">
-                          <Link to="#" className="product-img stock-img">
-                            <ImageWithBasePath
-                              src="assets/img/products/expire-product-04.png"
-                              alt="product"
-                            />
-                          </Link>
-                          <Link to="#">Woodcraft Sandal</Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Link to="#">PT009</Link>
-                      </td>
-                      <td>29 Mar 2023</td>
-                      <td>27 May 2023</td>
-                      <td className="action-table-data">
-                        <div className="edit-delete-action">
-                          <Link className="me-2 p-2" to="#">
-                            <i data-feather="edit" className="feather-edit" />
-                          </Link>
-                          <Link
-                            className=" confirm-text p-2"
-                            to="#"
-                            onClick={showConfirmationAlert}
-                          >
-                            <i
-                              data-feather="trash-2"
-                              className="feather-trash-2"
-                            />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td>
-                        <div className="productimgname">
-                          <Link to="#" className="product-img stock-img">
-                            <ImageWithBasePath
-                              src="assets/img/products/stock-img-03.png"
-                              alt="product"
-                            />
-                          </Link>
-                          <Link to="#">Apple Series 5 Watch </Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Link to="#">PT010</Link>
-                      </td>
-                      <td>24 Mar 2023</td>
-                      <td>26 May 2023</td>
-                      <td className="action-table-data">
-                        <div className="edit-delete-action">
-                          <Link
-                            className="me-2 p-2"
-                            to="#"
-                            data-bs-toggle="modal"
-                            data-bs-target="#edit-units"
-                          >
-                            <i data-feather="edit" className="feather-edit" />
-                          </Link>
-                          <Link
-                            className=" confirm-text p-2"
-                            to="#"
-                            onClick={showConfirmationAlert}
-                          >
-                            <i
-                              data-feather="trash-2"
-                              className="feather-trash-2"
-                            />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
+                    {!homepageLoading &&
+                      homepageData?.data &&
+                      homepageData.data
+                        .find((item) => item.recenctProduct)
+                        ?.recenctProduct?.map((item, index) => (
+                          <tr key={index}>
+                            <td>
+                              <div className="productimgname">
+                                <Link to="#" className="product-img stock-img">
+                                  <ImageWithBasePath
+                                    src={item.images[0]?.url}
+                                    isBase={true}
+                                    alt="product"
+                                  />
+                                </Link>
+                                <Link to="#">{item.productName} </Link>
+                              </div>
+                            </td>
+                            <td>
+                              <Link to="#">{item?.reference}</Link>
+                            </td>
+                            <td>
+                              {new Date(
+                                item?.manufactureDate
+                              ).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </td>
+
+                            <td>
+                              {new Date(item?.expiryDate).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )}
+                            </td>
+
+                            <td className="action-table-data">
+                              <div className="edit-delete-action">
+                                <Link className="me-2 p-2" to="#">
+                                  <i
+                                    data-feather="edit"
+                                    className="feather-edit"
+                                  />
+                                </Link>
+                                <Link
+                                  className=" confirm-text p-2"
+                                  to="#"
+                                  onClick={showConfirmationAlert}
+                                >
+                                  <i
+                                    data-feather="trash-2"
+                                    className="feather-trash-2"
+                                  />
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
                   </tbody>
                 </table>
               </div>
