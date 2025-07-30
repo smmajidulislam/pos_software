@@ -12,6 +12,10 @@ const purchaseSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    quantity: {
+      type: Number,
+      required: true,
+    },
 
     referenceNo: {
       type: String,

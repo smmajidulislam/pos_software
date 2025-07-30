@@ -14,7 +14,33 @@ export const sellInvoiceApi = createApi({
         };
       },
     }),
+    getSellReport: builder.query({
+      query: () => {
+        return {
+          url: `/sales-report-data`,
+        };
+      },
+    }),
+    getPuchaceReport: builder.query({
+      query: () => {
+        return {
+          url: `/purchase-report-data`,
+        };
+      },
+    }),
+    getCustomerReport: builder.query({
+      query: () => {
+        return {
+          url: `/customer-report-data`,
+        };
+      },
+    }),
   }),
 });
 
-export const { useGetSellInvoicesQuery } = sellInvoiceApi;
+export const {
+  useGetSellInvoicesQuery,
+  useGetSellReportQuery,
+  useGetPuchaceReportQuery,
+  useGetCustomerReportQuery,
+} = sellInvoiceApi;

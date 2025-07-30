@@ -78,6 +78,15 @@ const {
 } = require("../controller/payment.controller");
 const { getSellInvoice } = require("../controller/paymentInvoice.controller");
 const { getHomePageData } = require("../controller/homepageData.comtroller");
+const {
+  getProductSalesReport,
+} = require("../controller/salesReport.controller");
+const {
+  getPurchaseReport,
+} = require("../controller/purchaceReport.controller");
+const {
+  getCustomerPaymentReport,
+} = require("../controller/customer.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -152,5 +161,9 @@ router.delete("/payments/:id", deletePayment);
 router.get("/or-sell-invoices", getSellInvoice);
 // DashBord Data
 router.get("/dashbord-data", getHomePageData);
+// report data
+router.get("/sales-report-data", getProductSalesReport);
+router.get("/purchase-report-data", getPurchaseReport);
+router.get("/customer-report-data", getCustomerPaymentReport);
 
 module.exports = router;

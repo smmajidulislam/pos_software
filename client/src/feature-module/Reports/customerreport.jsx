@@ -5,12 +5,15 @@ import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import Select from "react-select";
 import { StopCircle, User } from "react-feather";
 import Breadcrumbs from "../../core/breadcrumbs";
+import { useGetCustomerReportQuery } from "../../core/redux/api/sellsInvoice/sellInvoice";
 
 const CustomerReport = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
+  const { data: customerData, isLoading: isCustomerLoading } =
+    useGetCustomerReportQuery();
   const options = [
     { value: "sortByDate", label: "Sort by Date" },
     { value: "140923", label: "14 09 23" },
@@ -162,12 +165,6 @@ const CustomerReport = () => {
               <table className="table datanew">
                 <thead>
                   <tr>
-                    <th className="no-sort">
-                      <label className="checkboxs">
-                        <input type="checkbox" id="select-all" />
-                        <span className="checkmarks" />
-                      </label>
-                    </th>
                     <th>Customer ID</th>
                     <th>Customer Name</th>
                     <th>Amount</th>
@@ -178,196 +175,26 @@ const CustomerReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0001</td>
-                    <td>Thomas</td>
-                    <td>$1800</td>
-                    <td>$1800</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0002</td>
-                    <td>Rose</td>
-                    <td>$120</td>
-                    <td>$0.00</td>
-                    <td>$120</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-linedanger">Unpaid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0003</td>
-                    <td>Benjamin</td>
-                    <td>$2000</td>
-                    <td>$2000</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0004</td>
-                    <td>Kaitlin</td>
-                    <td>$1300</td>
-                    <td>$1300</td>
-                    <td>$1300</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badges-warning">Overdue</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0005</td>
-                    <td>Lilly</td>
-                    <td>$400</td>
-                    <td>$0.00</td>
-                    <td>$400</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-linedanger">Unpaid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0006</td>
-                    <td>Freda</td>
-                    <td>$700</td>
-                    <td>$700</td>
-                    <td>$700</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badges-warning">Overdue</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0007</td>
-                    <td>Alwin</td>
-                    <td>$800</td>
-                    <td>$800</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0008</td>
-                    <td>Maybelle</td>
-                    <td>$300</td>
-                    <td>$300</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0009</td>
-                    <td>Ellen</td>
-                    <td>$120</td>
-                    <td>$120</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>CT_0010</td>
-                    <td>Grace</td>
-                    <td>$600</td>
-                    <td>$600</td>
-                    <td>$0.00</td>
-                    <td>
-                      <span className="badges status-badge">Completed</span>
-                    </td>
-                    <td>
-                      <span className="badge-linesuccess">Paid</span>
-                    </td>
-                  </tr>
+                  {!isCustomerLoading &&
+                    customerData?.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item?.customerId}</td>
+                        <td>{item?.customerName}</td>
+                        <td>{item?.amount}</td>
+                        <td>{item?.paid}</td>
+                        <td>{item?.dueAmount}</td>
+                        <td>
+                          <span className="badges status-badge">
+                            {item?.status}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge-linesuccess">
+                            {item?.paymentStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
