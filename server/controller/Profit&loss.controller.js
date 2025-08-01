@@ -1,5 +1,5 @@
 const Order = require("../models/orderModel");
-const Purchase = require("../models/PurchaseModel");
+const Purchase = require("../models/purchaseModel");
 // যদি Purchase Return বা Sales Return আলাদা মডেল থাকে, তাহলে সেটিও import করবে
 
 const getProfitlossReport = async (req, res) => {
