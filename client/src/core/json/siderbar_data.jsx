@@ -245,12 +245,7 @@ export const SidebarData = [
             icon: <Icon.File />,
             showSubRoute: false,
           },
-          {
-            label: "Supplier Report",
-            link: "/supplier-report",
-            icon: <Icon.UserCheck />,
-            showSubRoute: false,
-          },
+
           {
             label: "Customer Report",
             link: "/customer-report",

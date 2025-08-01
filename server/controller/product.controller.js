@@ -149,7 +149,10 @@ exports.getProducts = async (req, res) => {
       baseQuery.productName = { $regex: search, $options: "i" };
     }
 
-    const data = await Product.find(baseQuery);
+    const data = await Product.find(baseQuery)
+      .populate("category", "name")
+      .populate("unit", "name")
+      .populate("brand", "name");
 
     return res.status(200).json({ message: "success", data });
   } catch (error) {

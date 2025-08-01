@@ -16,11 +16,14 @@ exports.getUsers = async (req, res) => {
   try {
     const { role } = req.query;
     const filter = {};
-    if (role) filter.role = role;
+    if (role && role !== "all") {
+      filter.role = role;
+    }
     const users = await User.find(filter).populate("posId");
     users.password = undefined;
     res.json(users);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };

@@ -83,7 +83,6 @@ const Dashboard = () => {
       opacity: 1,
     },
   });
-  console.log(homepageData);
   const MySwal = withReactContent(Swal);
   const showConfirmationAlert = () => {
     MySwal.fire({

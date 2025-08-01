@@ -1,15 +1,12 @@
 import {
   Box,
   ChevronUp,
-  Edit,
-  Eye,
   Filter,
   GitMerge,
   PlusCircle,
   RotateCcw,
   Sliders,
   StopCircle,
-  Trash2,
 } from "feather-icons-react/build/IconComponents";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,19 +14,27 @@ import { Link } from "react-router-dom";
 import Select from "react-select";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import Brand from "../../core/modals/inventory/brand";
-import withReactContent from "sweetalert2-react-content";
-import Swal from "sweetalert2";
 import { all_routes } from "../../Router/all_routes";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import Table from "../../core/pagination/datatable";
 import { setToogleHeader } from "../../core/redux/action";
 import { Download } from "react-feather";
+import { usePos } from "../../hooks/PosProvider";
+import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
 
 const ProductList = () => {
-  const dataSource = useSelector((state) => state.product_list);
   const dispatch = useDispatch();
   const data = useSelector((state) => state.toggle_header);
-
+  const { pos } = usePos();
+  const { data: productData } = useGetProductsQuery(
+    {
+      pos: pos?._id,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+  console.log(productData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
@@ -69,116 +74,61 @@ const ProductList = () => {
   const columns = [
     {
       title: "Product",
-      dataIndex: "product",
-      render: (text, record) => (
-        <span className="productimgname">
-          <Link to="/profile" className="product-img stock-img">
-            <ImageWithBasePath alt="icon/images" src={record.productImage} />
-          </Link>
+      dataIndex: "productName",
+      render: (text) => (
+        <span className="productimgname flex items-center gap-2">
           <Link to="/profile">{text}</Link>
         </span>
       ),
-      sorter: (a, b) => a.product.length - b.product.length,
+      sorter: (a, b) => a.productName.length - b.productName.length,
     },
     {
       title: "SKU",
       dataIndex: "sku",
       sorter: (a, b) => a.sku.length - b.sku.length,
     },
-
     {
       title: "Category",
       dataIndex: "category",
-      sorter: (a, b) => a.category.length - b.category.length,
+      render: (category) => category?.name || "-",
+      sorter: (a, b) => {
+        const nameA = a?.category?.name?.toLowerCase() || "";
+        const nameB = b?.category?.name?.toLowerCase() || "";
+        return nameA.localeCompare(nameB);
+      },
     },
-
     {
       title: "Brand",
       dataIndex: "brand",
-      sorter: (a, b) => a.brand.length - b.brand.length,
+      render: (brand) => brand?.name || "-",
+      sorter: (a, b) => {
+        const nameA = a?.brand?.name?.toLowerCase() || "";
+        const nameB = b?.brand?.name?.toLowerCase() || "";
+        return nameA.localeCompare(nameB);
+      },
     },
     {
       title: "Price",
       dataIndex: "price",
-      sorter: (a, b) => a.price.length - b.price.length,
+      render: (price) => `${price} ৳`,
+      sorter: (a, b) => a.price - b.price,
     },
     {
       title: "Unit",
       dataIndex: "unit",
-      sorter: (a, b) => a.unit.length - b.unit.length,
+      render: (unit) => unit?.name || "-",
+      sorter: (a, b) => {
+        const nameA = a?.unit?.name?.toLowerCase() || "";
+        const nameB = b?.unit?.name?.toLowerCase() || "";
+        return nameA.localeCompare(nameB);
+      },
     },
     {
       title: "Qty",
-      dataIndex: "qty",
-      sorter: (a, b) => a.qty.length - b.qty.length,
-    },
-
-    {
-      title: "Created By",
-      dataIndex: "createdby",
-      render: (text, record) => (
-        <span className="userimgname">
-          <Link to="/profile" className="product-img">
-            <ImageWithBasePath alt="icon/images" src={record.img} />
-          </Link>
-          <Link to="/profile">{text}</Link>
-        </span>
-      ),
-      sorter: (a, b) => a.createdby.length - b.createdby.length,
-    },
-    {
-      title: "Action",
-      dataIndex: "action",
-      render: () => (
-        <td className="action-table-data">
-          <div className="edit-delete-action">
-            <div className="input-block add-lists"></div>
-            <Link className="me-2 p-2" to={route.productdetails}>
-              <Eye className="feather-view" />
-            </Link>
-            <Link className="me-2 p-2" to={route.editproduct}>
-              <Edit className="feather-edit" />
-            </Link>
-            <Link
-              className="confirm-text p-2"
-              to="#"
-              onClick={showConfirmationAlert}
-            >
-              <Trash2 className="feather-trash-2" />
-            </Link>
-          </div>
-        </td>
-      ),
-      sorter: (a, b) => a.createdby.length - b.createdby.length,
+      dataIndex: "stock",
+      sorter: (a, b) => a.qty - b.qty,
     },
   ];
-  const MySwal = withReactContent(Swal);
-
-  const showConfirmationAlert = () => {
-    MySwal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      showCancelButton: true,
-      confirmButtonColor: "#00ff00",
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonColor: "#ff0000",
-      cancelButtonText: "Cancel",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        MySwal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          className: "btn btn-success",
-          confirmButtonText: "OK",
-          customClass: {
-            confirmButton: "btn btn-success",
-          },
-        });
-      } else {
-        MySwal.close();
-      }
-    });
-  };
 
   const renderTooltip = (props) => (
     <Tooltip id="pdf-tooltip" {...props}>
@@ -406,7 +356,7 @@ const ProductList = () => {
             </div>
             {/* /Filter */}
             <div className="table-responsive">
-              <Table columns={columns} dataSource={dataSource} />
+              <Table columns={columns} dataSource={productData?.data} />
             </div>
           </div>
         </div>

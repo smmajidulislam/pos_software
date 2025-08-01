@@ -14,12 +14,14 @@ import Table from "../../core/pagination/datatable";
 import AddRole from "../../core/modals/usermanagement/addrole";
 import EditRole from "../../core/modals/usermanagement/editrole";
 import { all_routes } from "../../Router/all_routes";
+import { useGetRoleAndpermissionQuery } from "../../core/redux/api/sellsInvoice/sellInvoice";
 // import { all_routes } from "../../Router/all_routes";
 
 const RolesPermissions = () => {
   const route = all_routes;
   const data = useSelector((state) => state.toggle_header);
-  const dataSource = useSelector((state) => state.rolesandpermission_data);
+  const { data: roleData } = useGetRoleAndpermissionQuery();
+  console.log(roleData?.data);
 
   const dispatch = useDispatch();
   const [isFilterVisible, setIsFilterVisible] = useState(false);
@@ -304,7 +306,7 @@ const RolesPermissions = () => {
               </div>
               {/* /Filter */}
               <div className="table-responsive">
-                <Table columns={columns} dataSource={dataSource} />
+                <Table columns={columns} dataSource={roleData?.data} />
               </div>
             </div>
           </div>

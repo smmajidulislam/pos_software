@@ -35,6 +35,20 @@ export const sellInvoiceApi = createApi({
         };
       },
     }),
+    getProfitAndLossReport: builder.query({
+      query: () => {
+        return {
+          url: `/profit&loss-report-data`,
+        };
+      },
+    }),
+    getRoleAndpermission: builder.query({
+      query: () => {
+        return {
+          url: `/role-and-permission`,
+        };
+      },
+    }),
   }),
 });
 
@@ -43,4 +57,6 @@ export const {
   useGetSellReportQuery,
   useGetPuchaceReportQuery,
   useGetCustomerReportQuery,
+  useGetProfitAndLossReportQuery,
+  useGetRoleAndpermissionQuery,
 } = sellInvoiceApi;

@@ -87,6 +87,10 @@ const {
 const {
   getCustomerPaymentReport,
 } = require("../controller/customer.controller");
+const { getProfitlossReport } = require("../controller/Profit&loss.controller");
+const {
+  getAllRolesAndCreatedDates,
+} = require("../controller/getAllROleAndCreateddates");
 
 // auth routes
 router.post("/signup", signUp);
@@ -165,5 +169,7 @@ router.get("/dashbord-data", getHomePageData);
 router.get("/sales-report-data", getProductSalesReport);
 router.get("/purchase-report-data", getPurchaseReport);
 router.get("/customer-report-data", getCustomerPaymentReport);
+router.get("/profit&loss-report-data", getProfitlossReport);
+router.get("/role-and-permission", getAllRolesAndCreatedDates);
 
 module.exports = router;
