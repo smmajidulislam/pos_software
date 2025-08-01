@@ -1,4 +1,4 @@
-const Purchase = require("../models/PurchaseModel");
+const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 
 const getAllPurchases = async (req, res) => {
