@@ -1,6 +1,6 @@
 const User = require("../models/userModel");
 const Order = require("../models/orderModel");
-const Purchase = require("../models/PurchaseModel");
+const Purchase = require("../models/purchaseModel");
 const Product = require("../models/productModel");
 const getHomePageData = async (req, res) => {
   try {
