@@ -80,7 +80,7 @@ const RegisterThree = () => {
               <div className="login-userset">
                 <div className="login-userheading">
                   <h3>Register</h3>
-                  <h4>Create New Dreamspos Account</h4>
+                  <h4>Create New Selo Pos Account</h4>
                 </div>
 
                 <div className="form-login">
@@ -262,7 +262,7 @@ const RegisterThree = () => {
           </div>
 
           <div className="my-4 d-flex justify-content-center align-items-center copyright-text">
-            <p>Copyright © 2023 DreamsPOS. All rights reserved.</p>
+            <p>Copyright © 2023 Selo Pos. All rights reserved.</p>
           </div>
         </div>
       </div>
