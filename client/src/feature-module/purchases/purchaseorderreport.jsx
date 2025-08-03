@@ -13,10 +13,13 @@ import { setToogleHeader } from "../../core/redux/action";
 import { useDispatch, useSelector } from "react-redux";
 import Select from "react-select";
 import { DatePicker } from "antd";
+import { useGetPurchaseReportFOrPurchaseSectionQuery } from "../../core/redux/api/purchageApi/purchaceApi";
 
 const PurchaseOrderReport = () => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.toggle_header);
+  const { data: reportData } = useGetPurchaseReportFOrPurchaseSectionQuery();
+  console.log(reportData);
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
@@ -239,12 +242,6 @@ const PurchaseOrderReport = () => {
                 <table className="table datanew">
                   <thead>
                     <tr>
-                      <th className="no-sort">
-                        <label className="checkboxs">
-                          <input type="checkbox" id="select-all" />
-                          <span className="checkmarks" />
-                        </label>
-                      </th>
                       <th>Product Name</th>
                       <th>Purchased amount</th>
                       <th>Purchased QTY</th>
@@ -252,226 +249,16 @@ const PurchaseOrderReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product1.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Macbook pro</Link>
-                      </td>
-                      <td>38698.00</td>
-                      <td>1248</td>
-                      <td>1356</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product2.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Orange</Link>
-                      </td>
-                      <td>36080.00</td>
-                      <td>110</td>
-                      <td>131</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product3.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Pineapple</Link>
-                      </td>
-                      <td>21000.00</td>
-                      <td>106</td>
-                      <td>131</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product4.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Strawberry</Link>
-                      </td>
-                      <td>11000.00</td>
-                      <td>105</td>
-                      <td>100</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product5.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Sunglasses</Link>
-                      </td>
-                      <td>10600.00</td>
-                      <td>105</td>
-                      <td>100</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product6.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Unpaired gray</Link>
-                      </td>
-                      <td>9984.00</td>
-                      <td>50</td>
-                      <td>50</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product7.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Avocat</Link>
-                      </td>
-                      <td>4500.00 </td>
-                      <td>41</td>
-                      <td>29</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product8.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Banana</Link>
-                      </td>
-                      <td>900.00 </td>
-                      <td>28</td>
-                      <td>24</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product9.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Earphones</Link>
-                      </td>
-                      <td>500.00</td>
-                      <td>20</td>
-                      <td>11</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product8.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Banana</Link>
-                      </td>
-                      <td>900.00 </td>
-                      <td>28</td>
-                      <td>24</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <label className="checkboxs">
-                          <input type="checkbox" />
-                          <span className="checkmarks" />
-                        </label>
-                      </td>
-                      <td className="productimgname">
-                        <Link className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/products/product9.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Earphones</Link>
-                      </td>
-                      <td>500.00</td>
-                      <td>20</td>
-                      <td>11</td>
-                    </tr>
+                    {reportData?.map((item, index) => (
+                      <tr key={index}>
+                        <td className="productimgname">
+                          <Link to="#">{item?.productName}</Link>
+                        </td>
+                        <td>{item?.purchaseAmount}</td>
+                        <td>{item?.purchaseQty}</td>
+                        <td>{item?.inStockQty}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

@@ -7,6 +7,10 @@ const purchaseSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    Qty: {
+      type: Number,
+      default: 0,
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",

@@ -135,6 +135,8 @@ router.delete("/variants/:id", deleteVariant);
 // product routes
 router.post("/product/purchace", createPurchase);
 router.get("/product/purchace", getAllPurchases);
+// get purchase report for purchase section
+router.get("/purchase-report", getPurchaseReport);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);

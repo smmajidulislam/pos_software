@@ -23,8 +23,16 @@ export const parchaceApi = createApi({
         return "";
       },
     }),
+    getPurchaseReportFOrPurchaseSection: builder.query({
+      query: () => ({
+        url: "/purchase-report",
+      }),
+    }),
   }),
 });
 
-export const { useCreateParchaceMutation, useGetAllParchaceQuery } =
-  parchaceApi;
+export const {
+  useCreateParchaceMutation,
+  useGetAllParchaceQuery,
+  useGetPurchaseReportFOrPurchaseSectionQuery,
+} = parchaceApi;

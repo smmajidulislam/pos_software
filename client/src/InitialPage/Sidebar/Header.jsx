@@ -17,7 +17,6 @@ const Header = () => {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data, isLoading } = useGetAllPosQuery();
-  console.log(data);
   const { selectPos, removePos, pos } = usePos();
   const navigate = useNavigate();
   const { logout } = useAuth();
