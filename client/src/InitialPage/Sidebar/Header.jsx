@@ -13,8 +13,11 @@ import { useLogoutMutation } from "../../core/redux/api/authapi/authApi";
 const Header = () => {
   const route = all_routes;
   const [toggle, SetToggle] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { data, isLoading } = useGetAllPosQuery();
+  console.log(data);
   const { selectPos, removePos, pos } = usePos();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -108,6 +111,19 @@ const Header = () => {
       );
     };
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const dropdown = document.getElementById("store-dropdown");
+      if (dropdown && !dropdown.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const handlesidebar = () => {
     document.body.classList.toggle("mini-sidebar");
     SetToggle((current) => !current);
@@ -168,8 +184,15 @@ const Header = () => {
 
     selectPos(item);
   };
+
+  // handle dropdown toggle
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  // close dropdown when clicking outside (optional enhancement)
+
   const handleLoguot = async () => {
-    // api call here
     removePos();
     await logOut();
     logout();
@@ -327,11 +350,16 @@ const Header = () => {
           {/* /Search */}
 
           {/* Select Store */}
-          <li className="nav-item dropdown has-arrow main-drop select-store-dropdown cursor-pointer">
-            <Link
-              to="#"
+          <li
+            className={`nav-item dropdown has-arrow main-drop select-store-dropdown cursor-pointer ${
+              isDropdownOpen ? "show" : ""
+            }`}
+            id="store-dropdown"
+            style={{ position: "relative" }} // Parent element should be relatively positioned
+          >
+            <div
               className="dropdown-toggle nav-link select-store cursor-pointer"
-              data-bs-toggle="dropdown"
+              onClick={toggleDropdown}
             >
               <span className="user-info cursor-pointer">
                 <span className="user-detail cursor-pointer">
@@ -340,25 +368,49 @@ const Header = () => {
                   </span>
                 </span>
               </span>
-            </Link>
-            <div className="dropdown-menu dropdown-menu-right cursor-pointer">
-              {!isLoading &&
-                data?.map((item, index) => (
-                  <div
-                    className="dropdown-item cursor-pointer"
-                    key={index}
-                    onClick={() => handleChangePos(item)}
-                  >
-                    <ImageWithBasePath
-                      src="assets/img/store/store-04.png"
-                      alt="Store Logo"
-                      className="img-fluid cursor-pointer"
-                    />{" "}
-                    <div className="cursor-pointer">{item?.label}</div>
-                  </div>
-                ))}
+            </div>
+
+            <div
+              className={`dropdown-menu dropdown-menu-right cursor-pointer ${
+                isDropdownOpen ? "show" : ""
+              }`}
+              style={{
+                position: "absolute",
+                top: "-100%", // dropdown will appear just below the toggle
+                left: "0", // align to left, change to "right: 0" if needed
+                zIndex: 9999,
+                maxHeight: "250px",
+                overflowY: "auto",
+                width: "300px",
+                padding: "10px",
+                marginTop: "0", // remove any default margin
+              }}
+            >
+              {data?.map((item, index) => (
+                <button
+                  className="dropdown-item cursor-pointer d-flex align-items-center gap-2"
+                  key={index}
+                  onClick={() => {
+                    handleChangePos(item);
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  <ImageWithBasePath
+                    src="assets/img/store/store-04.png"
+                    alt="Store Logo"
+                    className="img-fluid"
+                    style={{
+                      width: "30px",
+                      height: "30px",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <div>{item?.label}</div>
+                </button>
+              ))}
             </div>
           </li>
+
           {/* /Select Store */}
 
           <li className="nav-item nav-item-box">

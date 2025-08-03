@@ -111,7 +111,6 @@ const Dashboard = () => {
       }
     });
   };
-  console.log(pos?._id);
   const { user, loading } = useAuth();
   useEffect(() => {
     if (!user && loading === false) {
