@@ -1,4 +1,5 @@
 const Order = require("../models/orderModel");
+const Product = require("../models/productModel");
 const mongoose = require("mongoose");
 
 // CREATE ORDER
@@ -16,7 +17,7 @@ const createOrder = async (req, res) => {
       payment,
       due,
       grandTotal,
-      products,
+      products, // products is an array of objects with _id field
       posId,
     } = req.body;
 
@@ -31,6 +32,14 @@ const createOrder = async (req, res) => {
       reference = `REF-${refereNo}`;
       isExists = await Order.findOne({ reference });
     }
+    for (const item of products) {
+      await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+    }
+
     const newOrder = new Order({
       customerId,
       supplierId,
@@ -61,6 +70,7 @@ const createOrder = async (req, res) => {
     });
   }
 };
+
 const getAllOrders = async (req, res) => {
   try {
     const { customer, status, reference, paymentStatus, search, sort, posId } =

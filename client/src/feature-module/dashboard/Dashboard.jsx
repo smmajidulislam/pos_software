@@ -13,6 +13,7 @@ import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
 import { useAuth } from "../../hooks/AuthProvider";
 import { useGetHomepageQuery } from "../../core/redux/api/homepageApi/homepageApi";
+import { usePos } from "../../hooks/PosProvider";
 
 const Dashboard = () => {
   const { data: homepageData, isLoading: homepageLoading } =
@@ -83,6 +84,7 @@ const Dashboard = () => {
       opacity: 1,
     },
   });
+  const { pos, loading: posLoading } = usePos();
   const MySwal = withReactContent(Swal);
   const showConfirmationAlert = () => {
     MySwal.fire({
@@ -109,6 +111,7 @@ const Dashboard = () => {
       }
     });
   };
+  console.log(pos?._id);
   const { user, loading } = useAuth();
   useEffect(() => {
     if (!user && loading === false) {
@@ -174,7 +177,13 @@ const Dashboard = () => {
         },
       });
     }
-  }, [homepageData, homepageLoading]);
+    if (!pos?._id && !posLoading) {
+      Swal.fire({
+        title: "Please select a POS",
+        text: "select your pos first or your pos will not work! if you dont have any pos please create one",
+      });
+    }
+  }, [homepageData, homepageLoading, posLoading, pos?._id]);
   return (
     <div>
       <div className="page-wrapper">

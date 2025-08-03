@@ -30,10 +30,11 @@ export const PosProvider = ({ children }) => {
       if (storedPos) {
         const posData = JSON.parse(storedPos);
         setPos(posData);
-        setLoading(false);
       }
     } catch (error) {
       console.error("Failed to retrieve POS:", error);
+    } finally {
+      setLoading(false); // ✅ Always set loading to false
     }
   }, []);
 

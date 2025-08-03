@@ -1,6 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Box } from "react-feather";
+// index.js বা app.js বা root component ফাইলে
+import { Modal } from "bootstrap";
+import { handlePrint } from "../../utils/Print";
+
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import { RotateCw } from "feather-icons-react/build/IconComponents";
 import { Check, CheckCircle, Trash2, UserPlus } from "react-feather";
@@ -36,12 +40,19 @@ const Pos = () => {
   const [paidPayment, setPaidPayment] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [isNextOrPayment, setIsNextOrPayment] = useState(false);
+  const [recipt, setRecipt] = useState({});
+  const [subTotalForRecipt, setSubTotalForRecipt] = useState(0);
+  const [totalDiscount, setTotalDiscount] = useState(0);
+  const [totalTax, setTotalTax] = useState(0);
+  const [totalBill, setTotalBill] = useState(0);
 
   const dispatch = useDispatch();
   const [createOrder] = useCreateOrderMutation();
   // data management
   const { pos } = usePos();
   const reduxStateOrders = useSelector((state) => state.posCart);
+
   // const [createUser]=useCreateUserMutation();
   const { data: categoriesList } = useGetCategoriesQuery(
     {
@@ -50,7 +61,7 @@ const Pos = () => {
     { skip: !pos?._id }
   );
 
-  const { data: productsList } = useGetProductsQuery(
+  const { data: productsList, refetch: refetchProducts } = useGetProductsQuery(
     {
       pos: pos?._id,
       categoryId: catchCategoryId,
@@ -82,6 +93,8 @@ const Pos = () => {
       setCustomers(customerList);
     }
   }, [categoriesList, usersLoading, usersList]);
+  const componentRef = useRef();
+
   const orderTax = useMemo(() => {
     return reduxStateOrders?.products.reduce(
       (acc, curr) => acc + curr.taxValue * quantity,
@@ -175,9 +188,15 @@ const Pos = () => {
       };
 
       const result = await createOrder(orderData).unwrap();
+      console.log(result);
       if (result?.message === "Order created successfully") {
+        refetchProducts();
+        setRecipt(result?.data);
         Swal.fire("Success", "Order submitted as " + statusType, "success");
+        const modal = new Modal(document.getElementById("payment-completed"));
+        modal.show();
       }
+      setIsNextOrPayment(true);
     } catch (err) {
       Swal.fire(
         "Error",
@@ -186,6 +205,32 @@ const Pos = () => {
       );
     }
   };
+
+  useEffect(() => {
+    if (recipt?.products?.length > 0) {
+      const subTotal = recipt.products.reduce(
+        (total, product) => total + product.rate * product.quantity,
+        0
+      );
+
+      const discount = recipt.products.reduce(
+        (total, product) => total + (product.discountAmount || 0),
+        0
+      );
+
+      const tax = recipt.products.reduce(
+        (total, product) => total + (product.taxAmount || 0),
+        0
+      );
+
+      const bill = subTotal - discount + tax;
+
+      setSubTotalForRecipt(subTotal);
+      setTotalDiscount(discount);
+      setTotalTax(tax);
+      setTotalBill(bill);
+    }
+  }, [recipt]);
 
   const renderTooltip = (props) => (
     <Tooltip id="pdf-tooltip" {...props}>
@@ -664,10 +709,9 @@ const Pos = () => {
                     Grand Total : {"৳ " + grandTotal}
                   </Link>
                 </div>
-
                 <div className="btn-row d-sm-flex align-items-center justify-content-between">
-                  <Link
-                    to="#"
+                  <button
+                    type="button"
                     className="btn btn-info btn-icon flex-fill"
                     data-bs-toggle="modal"
                     data-bs-target="#hold-order"
@@ -677,9 +721,10 @@ const Pos = () => {
                       <i data-feather="pause" className="feather-16" />
                     </span>
                     Hold
-                  </Link>
-                  <Link
-                    to="#"
+                  </button>
+
+                  <button
+                    type="button"
                     className="btn btn-danger btn-icon flex-fill"
                     onClick={() => handleOrderSubmit("void")}
                   >
@@ -687,19 +732,20 @@ const Pos = () => {
                       <i data-feather="trash-2" className="feather-16" />
                     </span>
                     Void
-                  </Link>
-                  <Link
-                    to="#"
+                  </button>
+
+                  <button
+                    type="button"
                     className="btn btn-success btn-icon flex-fill"
-                    data-bs-toggle="modal"
-                    data-bs-target="#payment-completed"
+                    data-bs-toggle={isNextOrPayment ? "modal" : ""}
+                    data-bs-target={isNextOrPayment ? "#payment-completed" : ""}
                     onClick={() => handleOrderSubmit("Completed")}
                   >
                     <span className="me-1 d-flex align-items-center">
                       <i data-feather="credit-card" className="feather-16" />
                     </span>
                     Payment
-                  </Link>
+                  </button>
                 </div>
               </aside>
             </div>
@@ -708,6 +754,7 @@ const Pos = () => {
       </div>
 
       {/* Payment Completed */}
+
       <div
         className="modal fade modal-default"
         id="payment-completed"
@@ -730,11 +777,27 @@ const Pos = () => {
                   <button
                     type="button"
                     className="btn btn-primary flex-fill me-1"
-                    data-bs-toggle="modal"
-                    data-bs-target="#print-receipt"
+                    onClick={() => {
+                      // Close payment-completed modal manually
+                      const modalEl =
+                        document.getElementById("payment-completed");
+                      const existingModal = Modal.getInstance(modalEl); // ⚠️ no 'new'
+                      if (existingModal) {
+                        existingModal.hide();
+                      }
+
+                      // Open print-receipt modal manually after short delay
+                      setTimeout(() => {
+                        const printModalEl =
+                          document.getElementById("print-receipt");
+                        const printModal = new Modal(printModalEl); // Only this line uses `new`
+                        printModal.show();
+                      }, 300);
+                    }}
                   >
                     Print Receipt
                   </button>
+
                   <Link
                     to="#"
                     className="btn btn-secondary flex-fill"
@@ -761,143 +824,135 @@ const Pos = () => {
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">
-            <div className="d-flex justify-content-end">
-              <button
-                type="button"
-                className="close p-0"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="icon-head text-center">
-                <Link to="#">
-                  <ImageWithBasePath
+            <div ref={componentRef}>
+              {/* EVERYTHING YOU WANT TO PRINT GOES HERE */}
+              <div className="modal-body">
+                {/* Receipt Header */}
+                <div className="icon-head text-center">
+                  <img
                     src="assets/img/logo.png"
                     width={100}
                     height={30}
                     alt="Receipt Logo"
                   />
-                </Link>
-              </div>
-              <div className="text-center info text-center">
-                <h6>Dreamguys Technologies Pvt Ltd.,</h6>
-                <p className="mb-0">Phone Number: +1 5656665656</p>
-                <p className="mb-0">
-                  Email:{" "}
-                  <Link to="mailto:example@gmail.com">example@gmail.com</Link>
-                </p>
-              </div>
-              <div className="tax-invoice">
-                <h6 className="text-center">Tax Invoice</h6>
-                <div className="row">
-                  <div className="col-sm-12 col-md-6">
-                    <div className="invoice-user-name">
-                      <span>Name: </span>
-                      <span>John Doe</span>
-                    </div>
-                    <div className="invoice-user-name">
-                      <span>Invoice No: </span>
-                      <span>CS132453</span>
-                    </div>
-                  </div>
-                  <div className="col-sm-12 col-md-6">
-                    <div className="invoice-user-name">
-                      <span>Customer Id: </span>
-                      <span>#LL93784</span>
-                    </div>
-                    <div className="invoice-user-name">
-                      <span>Date: </span>
-                      <span>01.07.2022</span>
+                </div>
+                <div className="text-center info text-center">
+                  <h6>Selo Pos Tecnology Pvt Ltd,</h6>
+                  <p className="mb-0">Phone Number: +880123456789</p>
+                  <p className="mb-0">Email: example@gmail.com</p>
+                </div>
+                {/* Invoice Body */}
+                <div className="tax-invoice">
+                  <h6 className="text-center">Purchase Invoice</h6>
+                  <div className="row">
+                    <div className="col-md-6">Ref No: {recipt?.reference}</div>
+                    <div className="col-md-6">
+                      Customer Id: {recipt?.customerId} <br />
+                      Date:{" "}
+                      {new Date(recipt?.createdAt).toLocaleDateString("en-GB", {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                   </div>
                 </div>
+
+                {/* Product Table */}
+                <table className="table-borderless w-100 table-fit">
+                  <thead>
+                    <tr>
+                      <th># Item</th>
+                      <th>Price</th>
+                      <th>Qty</th>
+                      <th className="text-end">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recipt?.products?.map((item, index) => (
+                      <tr key={index}>
+                        <td>
+                          {index + 1}. {item?.productName}
+                        </td>
+                        <td>{item?.rate}</td>
+                        <td>{item?.quantity}</td>
+                        <td className="text-end">{item?.totalPrice}</td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={4}>
+                        <table className="table-borderless w-100 table-fit">
+                          <tbody>
+                            <tr>
+                              <td>Sub Total :</td>
+                              <td className="text-end">
+                                ${subTotalForRecipt.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Discount :</td>
+                              <td className="text-end">
+                                ${totalDiscount.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Shipping :</td>
+                              <td className="text-end">
+                                ${(recipt?.shipping || 0).toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Tax :</td>
+                              <td className="text-end">
+                                ${totalTax.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Total Bill :</td>
+                              <td className="text-end">
+                                ${totalBill.toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Due :</td>
+                              <td className="text-end">
+                                ${(recipt?.due || 0).toFixed(2)}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Total Payable :</td>
+                              <td className="text-end">
+                                ${totalBill.toFixed(2)}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {/* Footer */}
+                <div className="text-center invoice-bar">
+                  <p>
+                    **VAT against this challan is payable through central
+                    registration.
+                  </p>
+                  <img src="assets/img/barcode/barcode-03.jpg" alt="Barcode" />
+                  <p>Thank You For Shopping With Us. Please Come Again</p>
+                </div>
               </div>
-              <table className="table-borderless w-100 table-fit">
-                <thead>
-                  <tr>
-                    <th># Item</th>
-                    <th>Price</th>
-                    <th>Qty</th>
-                    <th className="text-end">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>1. Red Nike Laser</td>
-                    <td>$50</td>
-                    <td>3</td>
-                    <td className="text-end">$150</td>
-                  </tr>
-                  <tr>
-                    <td>2. Iphone 14</td>
-                    <td>$50</td>
-                    <td>2</td>
-                    <td className="text-end">$100</td>
-                  </tr>
-                  <tr>
-                    <td>3. Apple Series 8</td>
-                    <td>$50</td>
-                    <td>3</td>
-                    <td className="text-end">$150</td>
-                  </tr>
-                  <tr>
-                    <td colSpan={4}>
-                      <table className="table-borderless w-100 table-fit">
-                        <tbody>
-                          <tr>
-                            <td>Sub Total :</td>
-                            <td className="text-end">$700.00</td>
-                          </tr>
-                          <tr>
-                            <td>Discount :</td>
-                            <td className="text-end">-$50.00</td>
-                          </tr>
-                          <tr>
-                            <td>Shipping :</td>
-                            <td className="text-end">0.00</td>
-                          </tr>
-                          <tr>
-                            <td>Tax (5%) :</td>
-                            <td className="text-end">$5.00</td>
-                          </tr>
-                          <tr>
-                            <td>Total Bill :</td>
-                            <td className="text-end">$655.00</td>
-                          </tr>
-                          <tr>
-                            <td>Due :</td>
-                            <td className="text-end">$0.00</td>
-                          </tr>
-                          <tr>
-                            <td>Total Payable :</td>
-                            <td className="text-end">$655.00</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <div className="text-center invoice-bar">
-                <p>
-                  **VAT against this challan is payable through central
-                  registration. Thank you for your business!
-                </p>
-                <Link to="#">
-                  <ImageWithBasePath
-                    src="assets/img/barcode/barcode-03.jpg"
-                    alt="Barcode"
-                  />
-                </Link>
-                <p>Sale 31</p>
-                <p>Thank You For Shopping With Us. Please Come Again</p>
-                <Link to="#" className="btn btn-primary">
-                  Print Receipt
-                </Link>
-              </div>
+            </div>
+
+            {/* Actual Print Button */}
+            <div className="d-flex justify-content-center my-3">
+              <button
+                className="btn btn-primary"
+                onClick={() => handlePrint(componentRef)}
+              >
+                Print Receipt
+              </button>
             </div>
           </div>
         </div>

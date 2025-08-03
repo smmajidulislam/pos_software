@@ -225,7 +225,7 @@ const RegisterThree = () => {
                   </h4>
                 </div>
 
-                <div className="form-setlogin or-text">
+                {/* <div className="form-setlogin or-text">
                   <h4>OR</h4>
                 </div>
 
@@ -256,7 +256,7 @@ const RegisterThree = () => {
                       </Link>
                     </li>
                   </ul>
-                </div>
+                </div> */}
               </div>
             </form>
           </div>
