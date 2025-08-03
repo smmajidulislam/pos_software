@@ -91,6 +91,9 @@ const { getProfitlossReport } = require("../controller/Profit&loss.controller");
 const {
   getAllRolesAndCreatedDates,
 } = require("../controller/getAllROleAndCreateddates");
+const {
+  getPurchaseReturns,
+} = require("../controller/purchaseRetruns.contoller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -137,6 +140,7 @@ router.post("/product/purchace", createPurchase);
 router.get("/product/purchace", getAllPurchases);
 // get purchase report for purchase section
 router.get("/purchase-report", getPurchaseReport);
+router.get("/purchase-return-data", getPurchaseReturns);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);

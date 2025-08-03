@@ -9,6 +9,7 @@ import {
   useGetProductsQuery,
 } from "../../redux/api/productapi/productApi";
 import { useCreateParchaceMutation } from "../../redux/api/purchageApi/purchaceApi";
+import Sawal from "sweetalert2";
 
 const AddPurchases = () => {
   const { pos } = usePos();
@@ -31,7 +32,6 @@ const AddPurchases = () => {
       skip: !selectedProduct,
     });
   const [createPurchace] = useCreateParchaceMutation();
-
   const { data: productList, isLoading: productLoading } = useGetProductsQuery(
     {
       pos: pos?._id,
@@ -103,7 +103,17 @@ const AddPurchases = () => {
     };
 
     const res = await createPurchace(purchaseDetails).unwrap();
-    console.log(res);
+    if (res?.success) {
+      Sawal.fire({
+        icon: "success",
+        title: "Purchase added successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    }
   };
 
   const purchasePrice = Product?.parchacePrice || 0;

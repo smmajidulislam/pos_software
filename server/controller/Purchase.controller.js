@@ -46,7 +46,6 @@ const createPurchase = async (req, res) => {
       date,
       quantity,
     } = req.body;
-
     const purchase = await Purchase.create({
       supplier: supplier?.value || supplier,
       product: product?._id || product,

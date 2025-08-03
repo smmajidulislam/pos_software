@@ -28,6 +28,12 @@ export const parchaceApi = createApi({
         url: "/purchase-report",
       }),
     }),
+    getParchaseRetrun: builder.query({
+      query: (refarnce) => ({
+        url: `/purchase-return-data?reference=${refarnce}`,
+      }),
+      invalidatesTags: ["Parchace"],
+    }),
   }),
 });
 
@@ -35,4 +41,5 @@ export const {
   useCreateParchaceMutation,
   useGetAllParchaceQuery,
   useGetPurchaseReportFOrPurchaseSectionQuery,
+  useGetParchaseRetrunQuery,
 } = parchaceApi;
