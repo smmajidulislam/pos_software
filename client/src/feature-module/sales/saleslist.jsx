@@ -17,6 +17,7 @@ import { Filter } from "react-feather";
 import Select from "react-select";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { useGetSuppliersQuery } from "../../core/redux/api/supplierApi/supplierApi";
 import { usePos } from "../../hooks/PosProvider";
 import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
@@ -714,76 +715,79 @@ const SalesList = () => {
                         </td>
                         <td>Admin</td>
                         <td className="text-center">
-                          <Link
-                            className="action-set"
-                            to="#"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="true"
-                          >
-                            <i
-                              className="fa fa-ellipsis-v"
-                              aria-hidden="true"
-                            />
-                          </Link>
-                          <ul className="dropdown-menu">
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item"
-                                data-bs-toggle="modal"
-                                data-bs-target="#sales-details-new"
-                                onClick={() => setSelectedOrder(item)}
-                              >
-                                <i data-feather="eye" className="info-img" />
-                                Sale Detail
-                              </Link>
-                            </li>
-
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item"
-                                data-bs-toggle="modal"
-                                data-bs-target="#showpayment"
-                                onClick={() => setSelectedOrder(item)}
-                              >
-                                <i
-                                  data-feather="dollar-sign"
-                                  className="info-img"
-                                />
-                                Show Payments
-                              </Link>
-                            </li>
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item"
-                                data-bs-toggle="modal"
-                                data-bs-target="#createpayment"
-                                onClick={() => setSelectedOrder(item)}
-                              >
-                                <i
-                                  data-feather="plus-circle"
-                                  className="info-img"
-                                />
-                                Create Payment
-                              </Link>
-                            </li>
-
-                            <li>
-                              <Link
-                                to="#"
-                                className="dropdown-item confirm-text mb-0"
-                                onClick={() => handleDeleteOrder(item?._id)}
-                              >
-                                <i
-                                  data-feather="trash-2"
-                                  className="info-img"
-                                />
-                                Delete Sale
-                              </Link>
-                            </li>
-                          </ul>
+                          <div className="dropdown">
+                            <button
+                              className="btn action-set"
+                              type="button"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
+                            >
+                              <i
+                                className="fa fa-ellipsis-v"
+                                aria-hidden="true"
+                              ></i>
+                            </button>
+                            <ul className="dropdown-menu">
+                              <li>
+                                <button
+                                  className="dropdown-item"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#sales-details-new"
+                                  onClick={() => setSelectedOrder(item)}
+                                  type="button"
+                                >
+                                  <i
+                                    data-feather="eye"
+                                    className="info-img"
+                                  ></i>{" "}
+                                  Sale Detail
+                                </button>
+                              </li>
+                              <li>
+                                <button
+                                  className="dropdown-item"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#showpayment"
+                                  onClick={() => setSelectedOrder(item)}
+                                  type="button"
+                                >
+                                  <i
+                                    data-feather="dollar-sign"
+                                    className="info-img"
+                                  ></i>{" "}
+                                  Show Payments
+                                </button>
+                              </li>
+                              <li>
+                                <button
+                                  className="dropdown-item"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#createpayment"
+                                  onClick={() => setSelectedOrder(item)}
+                                  type="button"
+                                >
+                                  <i
+                                    data-feather="plus-circle"
+                                    className="info-img"
+                                  ></i>{" "}
+                                  Create Payment
+                                </button>
+                              </li>
+                              <li>
+                                <button
+                                  className="dropdown-item confirm-text mb-0"
+                                  onClick={() => handleDeleteOrder(item?._id)}
+                                  type="button"
+                                >
+                                  <i
+                                    data-feather="trash-2"
+                                    className="info-img"
+                                  ></i>{" "}
+                                  Delete Sale
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
                         </td>
                       </tr>
                     ))}
