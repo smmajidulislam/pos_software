@@ -15,7 +15,6 @@ const productSchema = new mongoose.Schema(
         buyPrice: Number,
         salesPrice: Number,
         barcodeSymbology: String,
-        images: [String],
       },
     ],
 
@@ -57,7 +56,6 @@ const productSchema = new mongoose.Schema(
     expiryDate: { type: Date },
     manufactureDate: { type: Date },
     manufacturer: { type: Boolean, default: false },
-    parchacePrice: { type: Number },
     sellingType: { type: String }, // optional enum if fixed values
     quantityAlert: { type: Number },
     store: { type: mongoose.Schema.Types.ObjectId, ref: "pos" },

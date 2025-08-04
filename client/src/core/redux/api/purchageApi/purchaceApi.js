@@ -34,6 +34,19 @@ export const parchaceApi = createApi({
       }),
       invalidatesTags: ["Parchace"],
     }),
+    createPurchaseReturn: builder.mutation({
+      query: (data) => ({
+        url: "/purchase-return-create",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Parchace"],
+    }),
+    getAllPurchaseReturns: builder.query({
+      query: () => ({
+        url: "purchase-all-return",
+      }),
+    }),
   }),
 });
 
@@ -42,4 +55,6 @@ export const {
   useGetAllParchaceQuery,
   useGetPurchaseReportFOrPurchaseSectionQuery,
   useGetParchaseRetrunQuery,
+  useCreatePurchaseReturnMutation,
+  useGetAllPurchaseReturnsQuery,
 } = parchaceApi;

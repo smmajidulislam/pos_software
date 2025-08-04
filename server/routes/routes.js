@@ -93,6 +93,8 @@ const {
 } = require("../controller/getAllROleAndCreateddates");
 const {
   getPurchaseReturns,
+  createPurchaseReturn,
+  getAllPurchaseReturns,
 } = require("../controller/purchaseRetruns.contoller");
 
 // auth routes
@@ -141,6 +143,8 @@ router.get("/product/purchace", getAllPurchases);
 // get purchase report for purchase section
 router.get("/purchase-report", getPurchaseReport);
 router.get("/purchase-return-data", getPurchaseReturns);
+router.post("/purchase-return-create", createPurchaseReturn);
+router.get("/purchase-all-return", getAllPurchaseReturns);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);
