@@ -6,13 +6,44 @@ import { Globe, User } from "react-feather";
 import ImageWithBasePath from "../../img/imagewithbasebath";
 import Breadcrumbs from "../../breadcrumbs";
 import { usePos } from "../../../hooks/PosProvider";
-import { useGetWareHousesQuery } from "../../redux/api/wareHouseApi/wareHouseApi";
+import { useForm, Controller } from "react-hook-form";
+import {
+  useCreateWareHouseMutation,
+  useGetWareHousesQuery,
+} from "../../redux/api/wareHouseApi/wareHouseApi";
 
 const WareHouses = () => {
   const { pos } = usePos();
   const { data: wareHouseData } = useGetWareHousesQuery(pos?._id, {
     skip: !pos?._id,
   });
+  const { register, handleSubmit, control, reset } = useForm();
+  const [createWareHouse] = useCreateWareHouseMutation();
+
+  const onSubmit = async (data) => {
+    const payload = {
+      label: data.name,
+      value: data.name.toLowerCase().replace(/\s+/g, "-"),
+      pos: pos?._id,
+      phone: data.phone,
+      workPhone: data.workPhone,
+      email: data.email,
+      address1: data.address1,
+      address2: data.address2,
+      country: data.country?.label || "",
+      state: data.state,
+      city: data.city,
+      zipcode: data.zipcode,
+    };
+
+    try {
+      await createWareHouse(payload).unwrap();
+      reset();
+      document.getElementById("close-warehouse-modal").click(); // Close modal
+    } catch (err) {
+      console.error("Error creating warehouse:", err);
+    }
+  };
   console.log(wareHouseData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
@@ -216,12 +247,13 @@ const WareHouses = () => {
                       className="close"
                       data-bs-dismiss="modal"
                       aria-label="Close"
+                      id="close-warehouse-modal"
                     >
                       <span aria-hidden="true">×</span>
                     </button>
                   </div>
                   <div className="modal-body custom-modal-body">
-                    <form>
+                    <form onSubmit={handleSubmit(onSubmit)}>
                       <div className="modal-title-head">
                         <h6>
                           <span>
@@ -230,42 +262,55 @@ const WareHouses = () => {
                           Warehouse Info
                         </h6>
                       </div>
+
                       <div className="row">
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Name</label>
-                            <input type="text" className="form-control" />
-                          </div>
+                        <div className="col-lg-6 mb-3">
+                          <label className="form-label">Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            {...register("name")}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="input-blocks">
-                            <label>Contact Person</label>
-                            <Select className="select" options={options1} />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>Contact Person</label>
+                          <Controller
+                            name="contactPerson"
+                            control={control}
+                            render={({ field }) => (
+                              <Select options={options1} {...field} />
+                            )}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3 war-add">
-                            <label className="mb-2">Phone Number</label>
-                            <input
-                              className="form-control"
-                              id="phone"
-                              name="phone"
-                              type="text"
-                            />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>Phone Number</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("phone")}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">Work Phone</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>Work Phone</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("workPhone")}
+                          />
                         </div>
-                        <div className="col-lg-12">
-                          <div className="mb-3">
-                            <label className="form-label">Email</label>
-                            <input type="email" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-12 mb-3">
+                          <label>Email</label>
+                          <input
+                            className="form-control"
+                            type="email"
+                            {...register("email")}
+                          />
                         </div>
+
                         <div className="modal-title-head">
                           <h6>
                             <span>
@@ -274,43 +319,64 @@ const WareHouses = () => {
                             Location
                           </h6>
                         </div>
-                        <div className="col-lg-12">
-                          <div className="mb-3">
-                            <label className="form-label">Address 1</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-12 mb-3">
+                          <label>Address 1</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("address1")}
+                          />
                         </div>
-                        <div className="col-lg-12">
-                          <div className="mb-3">
-                            <label className="form-label">Address 2</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-12 mb-3">
+                          <label>Address 2</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("address2")}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="input-blocks">
-                            <label>Country</label>
-                            <Select className="select" options={options2} />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>Country</label>
+                          <Controller
+                            name="country"
+                            control={control}
+                            render={({ field }) => (
+                              <Select options={options2} {...field} />
+                            )}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3">
-                            <label className="form-label">State</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>State</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("state")}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3 mb-0">
-                            <label className="form-label">City</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>City</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("city")}
+                          />
                         </div>
-                        <div className="col-lg-6">
-                          <div className="mb-3 mb-0">
-                            <label className="form-label">Zipcode</label>
-                            <input type="text" className="form-control" />
-                          </div>
+
+                        <div className="col-lg-6 mb-3">
+                          <label>Zipcode</label>
+                          <input
+                            className="form-control"
+                            type="text"
+                            {...register("zipcode")}
+                          />
                         </div>
                       </div>
+
                       <div className="modal-footer-btn">
                         <button
                           type="button"

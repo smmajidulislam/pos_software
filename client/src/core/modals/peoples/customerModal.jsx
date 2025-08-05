@@ -2,8 +2,31 @@ import React from "react";
 import Select from "react-select";
 import ImageWithBasePath from "../../img/imagewithbasebath";
 import { Link } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import { useCreatePosMutation } from "../../redux/api/posApi/posApi";
+import { usePos } from "../../../hooks/PosProvider";
 
 const CustomerModal = () => {
+  const { register, handleSubmit, control, reset } = useForm();
+  const [createPos] = useCreatePosMutation();
+  const { pos } = usePos();
+
+  const onSubmit = async (data) => {
+    try {
+      const payload = {
+        value: data.name.toLowerCase().replace(/\s+/g, "-"),
+        label: data.name,
+        admin: data.email,
+        pos: pos?._id,
+      };
+
+      await createPos(payload).unwrap();
+      reset();
+      document.getElementById("close-add-store").click();
+    } catch (error) {
+      console.error("Error creating POS:", error);
+    }
+  };
   const countriesOptions = [
     { value: "choose", label: "Choose" },
     { value: "unitedKingdom", label: "United Kingdom" },
@@ -26,19 +49,20 @@ const CustomerModal = () => {
               <div className="content">
                 <div className="modal-header border-0 custom-modal-header">
                   <div className="page-title">
-                    <h4>Add Customer</h4>
+                    <h4>Add Store</h4>
                   </div>
                   <button
                     type="button"
                     className="close"
                     data-bs-dismiss="modal"
                     aria-label="Close"
+                    id="close-add-store"
                   >
                     <span aria-hidden="true">×</span>
                   </button>
                 </div>
                 <div className="modal-body custom-modal-body">
-                  <form>
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="modal-title-head people-cust-avatar">
                       <h6>Avatar</h6>
                     </div>
@@ -55,7 +79,7 @@ const CustomerModal = () => {
                         </div>
                         <div className="mb-3">
                           <div className="image-upload mb-0">
-                            <input type="file" />
+                            <input type="file" {...register("avatar")} />
                             <div className="image-uploads">
                               <h4>Change Image</h4>
                             </div>
@@ -63,62 +87,76 @@ const CustomerModal = () => {
                         </div>
                       </div>
                     </div>
+
                     <div className="row">
-                      <div className="col-lg-4 pe-0">
-                        <div className="mb-3">
-                          <label className="form-label">Customer Name</label>
-                          <input type="text" className="form-control" />
-                        </div>
+                      <div className="col-lg-4 pe-0 mb-3">
+                        <label className="form-label">Customer Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          {...register("name", { required: true })}
+                        />
                       </div>
-                      <div className="col-lg-4 pe-0">
-                        <div className="mb-3">
-                          <label className="form-label">Email</label>
-                          <input type="email" className="form-control" />
-                        </div>
+                      <div className="col-lg-4 pe-0 mb-3">
+                        <label className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          {...register("email")}
+                        />
                       </div>
-                      <div className="col-lg-4 pe-0">
-                        <div className="input-blocks">
-                          <label className="mb-2">Phone</label>
-                          <input
-                            className="form-control form-control-lg group_formcontrol"
-                            id="phone"
-                            name="phone"
-                            type="text"
-                          />
-                        </div>
+                      <div className="col-lg-4 pe-0 mb-3">
+                        <label className="form-label">Phone</label>
+                        <input
+                          className="form-control form-control-lg group_formcontrol"
+                          type="text"
+                          {...register("phone")}
+                        />
                       </div>
-                      <div className="col-lg-12 pe-0">
-                        <div className="mb-3">
-                          <label className="form-label">Address</label>
-                          <input type="text" className="form-control" />
-                        </div>
+
+                      <div className="col-lg-12 pe-0 mb-3">
+                        <label className="form-label">Address</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          {...register("address")}
+                        />
                       </div>
-                      <div className="col-lg-6 pe-0">
-                        <div className="mb-3">
-                          <label className="form-label">City</label>
-                          <input type="text" className="form-control" />
-                        </div>
+
+                      <div className="col-lg-6 pe-0 mb-3">
+                        <label className="form-label">City</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          {...register("city")}
+                        />
                       </div>
-                      <div className="col-lg-6 pe-0">
-                        <div className="mb-3">
-                          <label className="form-label">Country</label>
-                          <Select
-                            className="select"
-                            options={countriesOptions}
-                          />
-                        </div>
+
+                      <div className="col-lg-6 pe-0 mb-3">
+                        <label className="form-label">Country</label>
+                        <Controller
+                          name="country"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={countriesOptions}
+                              className="select"
+                            />
+                          )}
+                        />
                       </div>
-                      <div className="col-lg-12">
-                        <div className="mb-3 input-blocks">
-                          <label className="form-label">Descriptions</label>
-                          <textarea
-                            className="form-control mb-1"
-                            defaultValue={""}
-                          />
-                          <p>Maximum 60 Characters</p>
-                        </div>
+
+                      <div className="col-lg-12 mb-3">
+                        <label className="form-label">Descriptions</label>
+                        <textarea
+                          className="form-control mb-1"
+                          {...register("description")}
+                        />
+                        <p>Maximum 60 Characters</p>
                       </div>
                     </div>
+
                     <div className="modal-footer-btn">
                       <button
                         type="button"

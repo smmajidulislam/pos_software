@@ -1,9 +1,11 @@
 const Pos = require("../models/posModel");
+const User = require("../models/userModel");
 
 const createPos = async (req, res) => {
   try {
     const { value, label, admin } = req.body;
-    const pos = await Pos.create({ value, label, admin });
+    const findAdmin = await User.findOne({ email: admin });
+    const pos = await Pos.create({ value, label, admin: findAdmin });
     return res.status(201).json(pos);
   } catch (error) {
     return res.status(500).json({ message: error.message });
