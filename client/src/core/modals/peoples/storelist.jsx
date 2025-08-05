@@ -3,16 +3,16 @@ import { Link } from "react-router-dom";
 import { Filter, Sliders } from "react-feather";
 import Select from "react-select";
 import { Edit, Eye, Globe, Trash2, User } from "react-feather";
-import { useSelector } from "react-redux";
 import { Table } from "antd";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import ImageWithBasePath from "../../img/imagewithbasebath";
 import Breadcrumbs from "../../breadcrumbs";
 import CustomerModal from "./customerModal";
+import { useGetAllPosQuery } from "../../redux/api/posApi/posApi";
 
 const StoreList = () => {
-  const data = useSelector((state) => state.customerdata);
+  const { data: posdata } = useGetAllPosQuery();
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
@@ -40,80 +40,59 @@ const StoreList = () => {
 
   const columns = [
     {
-      render: () => (
-        <label className="checkboxs">
-          <input type="checkbox" />
-          <span className="checkmarks" />
-        </label>
-      ),
-    },
-
-    {
       title: "Store Name",
-      dataIndex: "CustomerName",
-      sorter: (a, b) => a.CustomerName.length - b.CustomerName.length,
+      dataIndex: "label",
+      sorter: (a, b) => a.label.localeCompare(b.label),
+      align: "center",
     },
     {
       title: "Code",
-      dataIndex: "Code",
-      sorter: (a, b) => a.Code.length - b.Code.length,
+      dataIndex: "value",
+      sorter: (a, b) => a.value.localeCompare(b.value),
+      align: "center",
     },
     {
-      title: "Store",
-      dataIndex: "Customer",
-      sorter: (a, b) => a.Customer.length - b.Customer.length,
+      title: "Admin Name",
+      dataIndex: "admin",
+      render: (admin) => admin?.name,
+      sorter: (a, b) => a.admin?.name.localeCompare(b.admin?.name),
+      align: "center",
     },
-
     {
-      title: "Email",
-      dataIndex: "Email",
-      sorter: (a, b) => a.Email.length - b.Email.length,
+      title: "Created At",
+      dataIndex: "createdAt",
+      render: (text) => new Date(text).toLocaleDateString("en-GB"),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      align: "center",
     },
-
-    {
-      title: "Phone",
-      dataIndex: "Phone",
-      sorter: (a, b) => a.Phone.length - b.Phone.length,
-    },
-
-    {
-      title: "Country",
-      dataIndex: "Country",
-      sorter: (a, b) => a.Country.length - b.Country.length,
-    },
-
     {
       title: "Action",
       dataIndex: "action",
-      render: () => (
-        <td className="action-table-data">
+      render: (_, record) => (
+        <div className="action-table-data">
           <div className="edit-delete-action">
-            <div className="input-block add-lists"></div>
-
             <Link className="me-2 p-2" to="#">
-              <Eye className="feather-view" />
+              <Eye size={16} className="feather-view" />
             </Link>
-
             <Link
               className="me-2 p-2"
               to="#"
               data-bs-toggle="modal"
               data-bs-target="#edit-units"
             >
-              <Edit className="feather-edit" />
+              <Edit size={16} className="feather-edit" />
             </Link>
-
             <Link
               className="confirm-text p-2"
               to="#"
-              onClick={showConfirmationAlert}
+              onClick={() => showConfirmationAlert(record._id)}
             >
-              <Trash2 className="feather-trash-2" />
+              <Trash2 size={16} className="feather-trash-2" />
             </Link>
           </div>
-        </td>
+        </div>
       ),
-      sorter: (a, b) => a.createdby.length - b.createdby.length,
+      align: "center",
     },
   ];
 
@@ -244,8 +223,8 @@ const StoreList = () => {
               <Table
                 className="table datanew"
                 columns={columns}
-                dataSource={data}
-                rowKey={(record) => record.id}
+                dataSource={posdata}
+                rowKey={(record) => record?._id}
                 // pagination={true}
               />
             </div>

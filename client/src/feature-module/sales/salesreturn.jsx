@@ -19,10 +19,28 @@ import withReactContent from "sweetalert2-react-content";
 import Swal from "sweetalert2";
 import AddSalesReturns from "../../core/modals/sales/addsalesreturns";
 import EditSalesRetuens from "../../core/modals/sales/editsalesretuens";
+import { useGetSalesReturnQuery } from "../../core/redux/api/orderApi/orderApi";
 const SalesReturn = () => {
   const dispatch = useDispatch();
   const data = useSelector((state) => state.toggle_header);
-  const dataSource = useSelector((state) => state.salesreturns_data);
+  // const dataSource = useSelector((state) => state.salesreturns_data);
+  const { data: salesreturn } = useGetSalesReturnQuery();
+  console.log(salesreturn);
+  const dataSource = salesreturn?.data?.map((item, index) => {
+    return {
+      key: index,
+      productname: item?.product?.productName || "N/A",
+      date: new Date(item.createdAt).toLocaleDateString(),
+      customer: item?.customer?.name || "N/A",
+      status: item?.status || "Pending",
+      grandtotal: item?.totalAmount || 0,
+      paid: item?.payment || 0,
+      due: item?.due || 0,
+      paymentstatus:
+        item?.due === 0 ? "Paid" : item?.payment === 0 ? "Unpaid" : "Partial",
+      img: item?.product?.images?.[0]?.url || "assets/img/no-img.png",
+    };
+  });
 
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
@@ -79,10 +97,8 @@ const SalesReturn = () => {
     {
       title: "Product Name",
       dataIndex: "productname",
-      render: (text, record) => (
+      render: (text) => (
         <div className="productimgname">
-          <Link to="#" className="product-img" />
-          <ImageWithBasePath alt="img" src={record.img} />
           <Link to="#" className="ms-2">
             {text}
           </Link>
@@ -105,10 +121,10 @@ const SalesReturn = () => {
       dataIndex: "status",
       render: (text) => (
         <div>
-          {text === "Received" && (
+          {text === "received" && (
             <span className="badges bg-lightgreen">{text}</span>
           )}
-          {text === "Pending" && (
+          {text === "pending" && (
             <span className="badges bg-lightred">{text}</span>
           )}
           {text === "Ordered" && (
@@ -156,7 +172,7 @@ const SalesReturn = () => {
       dataIndex: "actions",
       key: "actions",
       render: () => (
-        <td className="action-table-data">
+        <div className="action-table-data">
           <div className="edit-delete-action">
             <Link
               className="me-2 p-2"
@@ -174,7 +190,7 @@ const SalesReturn = () => {
               ></i>
             </Link>
           </div>
-        </td>
+        </div>
       ),
     },
   ];

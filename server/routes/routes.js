@@ -96,6 +96,11 @@ const {
   createPurchaseReturn,
   getAllPurchaseReturns,
 } = require("../controller/purchaseRetruns.contoller");
+const {
+  getSalesReturnByReference,
+  createSalesReturn,
+  getAllSalesReturns,
+} = require("../controller/sellsReturn.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -145,6 +150,10 @@ router.get("/purchase-report", getPurchaseReport);
 router.get("/purchase-return-data", getPurchaseReturns);
 router.post("/purchase-return-create", createPurchaseReturn);
 router.get("/purchase-all-return", getAllPurchaseReturns);
+// get sales report for sales section
+router.get("/sales-return/:reference", getSalesReturnByReference);
+router.post("/sales-return", createSalesReturn);
+router.get("/sales-return", getAllSalesReturns);
 // create product
 router.post("/product", createProduct);
 router.get("/product", getProducts);

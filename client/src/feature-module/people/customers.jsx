@@ -5,16 +5,17 @@ import { Filter, Sliders } from "react-feather";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import Select from "react-select";
 import { Edit, Eye, Globe, Trash2, User } from "react-feather";
-import { useSelector } from "react-redux";
 import { Table } from "antd";
 import CustomerModal from "../../core/modals/peoples/customerModal";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { useGetUsersQuery } from "../../core/redux/api/userApi/userApi";
 
 const Customers = () => {
-  const data = useSelector((state) => state.customerdata);
-
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const { data: customerData } = useGetUsersQuery({
+    role: "customer",
+  });
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
@@ -40,80 +41,53 @@ const Customers = () => {
 
   const columns = [
     {
-      render: () => (
-        <label className="checkboxs">
-          <input type="checkbox" />
-          <span className="checkmarks" />
-        </label>
-      ),
-    },
-
-    {
       title: "Customer Name",
-      dataIndex: "CustomerName",
-      sorter: (a, b) => a.CustomerName.length - b.CustomerName.length,
+      dataIndex: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
-    {
-      title: "Code",
-      dataIndex: "Code",
-      sorter: (a, b) => a.Code.length - b.Code.length,
-    },
-    {
-      title: "Customer",
-      dataIndex: "Customer",
-      sorter: (a, b) => a.Customer.length - b.Customer.length,
-    },
-
     {
       title: "Email",
-      dataIndex: "Email",
-      sorter: (a, b) => a.Email.length - b.Email.length,
+      dataIndex: "email",
+      sorter: (a, b) => a.email.localeCompare(b.email),
     },
-
     {
-      title: "Phone",
-      dataIndex: "Phone",
-      sorter: (a, b) => a.Phone.length - b.Phone.length,
+      title: "Role",
+      dataIndex: "role",
+      sorter: (a, b) => a.role.localeCompare(b.role),
     },
-
     {
-      title: "Country",
-      dataIndex: "Country",
-      sorter: (a, b) => a.Country.length - b.Country.length,
+      title: "Shift",
+      dataIndex: "shift",
+      sorter: (a, b) => a.shift.localeCompare(b.shift),
     },
-
+    {
+      title: "Status",
+      dataIndex: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+    },
     {
       title: "Action",
       dataIndex: "action",
       render: () => (
-        <td className="action-table-data">
-          <div className="edit-delete-action">
-            <div className="input-block add-lists"></div>
+        <div className="action-table-data flex gap-2">
+          <Link className="p-1" to="#">
+            <Eye size={16} className="text-gray-600" />
+          </Link>
 
-            <Link className="me-2 p-2" to="#">
-              <Eye className="feather-view" />
-            </Link>
+          <Link
+            className="p-1"
+            to="#"
+            data-bs-toggle="modal"
+            data-bs-target="#edit-units"
+          >
+            <Edit size={16} className="text-blue-600" />
+          </Link>
 
-            <Link
-              className="me-2 p-2"
-              to="#"
-              data-bs-toggle="modal"
-              data-bs-target="#edit-units"
-            >
-              <Edit className="feather-edit" />
-            </Link>
-
-            <Link
-              className="confirm-text p-2"
-              to="#"
-              onClick={showConfirmationAlert}
-            >
-              <Trash2 className="feather-trash-2" />
-            </Link>
-          </div>
-        </td>
+          <Link className="p-1" to="#" onClick={showConfirmationAlert}>
+            <Trash2 size={16} className="text-red-600" />
+          </Link>
+        </div>
       ),
-      sorter: (a, b) => a.createdby.length - b.createdby.length,
     },
   ];
 
@@ -244,9 +218,8 @@ const Customers = () => {
               <Table
                 className="table datanew"
                 columns={columns}
-                dataSource={data}
-                rowKey={(record) => record.id}
-                // pagination={true}
+                dataSource={customerData || []}
+                rowKey={(record) => record._id}
               />
             </div>
           </div>

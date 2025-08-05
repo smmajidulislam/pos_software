@@ -50,6 +50,20 @@ export const orderApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
+    getParchasesRetrun: builder.query({
+      query: (reference) => `/sales-return/${reference}`,
+    }),
+    createSalesReturn: builder.mutation({
+      query: (salesReturnData) => ({
+        url: "/sales-return",
+        method: "POST",
+        body: salesReturnData,
+      }),
+      invalidatesTags: ["SalesReturn"],
+    }),
+    getSalesReturn: builder.query({
+      query: () => `/sales-return`,
+    }),
   }),
 });
 
@@ -57,4 +71,7 @@ export const {
   useCreateOrderMutation,
   useGetOrdersQuery,
   useDeleteOrderMutation,
+  useGetParchasesRetrunQuery,
+  useCreateSalesReturnMutation,
+  useGetSalesReturnQuery,
 } = orderApi;

@@ -20,7 +20,7 @@ const getPos = async (req, res) => {
 };
 const getAllPos = async (req, res) => {
   try {
-    const pos = await Pos.find();
+    const pos = await Pos.find().populate("admin", "name");
     return res.status(200).json(pos);
   } catch (error) {
     return res.status(500).json({ message: error.message });

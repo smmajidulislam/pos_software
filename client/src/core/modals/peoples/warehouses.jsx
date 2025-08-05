@@ -5,8 +5,15 @@ import Select from "react-select";
 import { Globe, User } from "react-feather";
 import ImageWithBasePath from "../../img/imagewithbasebath";
 import Breadcrumbs from "../../breadcrumbs";
+import { usePos } from "../../../hooks/PosProvider";
+import { useGetWareHousesQuery } from "../../redux/api/wareHouseApi/wareHouseApi";
 
 const WareHouses = () => {
+  const { pos } = usePos();
+  const { data: wareHouseData } = useGetWareHousesQuery(pos?._id, {
+    skip: !pos?._id,
+  });
+  console.log(wareHouseData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
@@ -140,243 +147,51 @@ const WareHouses = () => {
             </div>
             {/* /Filter */}
             <div className="table-responsive">
-              <table className="table  datanew">
-                <thead>
+              <table className="table table-bordered table-hover datanew">
+                <thead className="table-light">
                   <tr>
-                    <th className="no-sort">
-                      <label className="checkboxs">
-                        <input type="checkbox" id="select-all" />
-                        <span className="checkmarks" />
-                      </label>
-                    </th>
                     <th>Warehouse</th>
-                    <th>Contact Person</th>
-                    <th>Phone</th>
-                    <th>Total Products</th>
-                    <th>Stock</th>
-                    <th>Qty</th>
-                    <th>Created On</th>
                     <th>Status</th>
-                    <th className="no-sort">Action</th>
+                    <th className="text-center" style={{ width: "120px" }}>
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>Legendary</td>
-                    <td>
-                      <div className="userimgname">
-                        <Link to="#" className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/users/user-08.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Steven</Link>
-                      </div>
-                    </td>
-                    <td>+1 45445 4454</td>
-                    <td>04</td>
-                    <td>55</td>
-                    <td>600</td>
-                    <td>04 Aug 2023</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Active</span>
-                    </td>
-                    <td className="action-table-data">
-                      <div className="edit-delete-action">
-                        <Link
-                          className="me-2 edit-icon p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="eye" className="feather-eye" />
-                        </Link>
-                        <Link
-                          className="me-2 p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="edit" className="feather-edit" />
-                        </Link>
-                        <Link className="confirm-text p-2" to="#">
-                          <i
-                            data-feather="trash-2"
-                            className="feather-trash-2"
-                          />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>Determined</td>
-                    <td>
-                      <div className="userimgname">
-                        <Link to="#" className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/users/user-04.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Gravely</Link>
-                      </div>
-                    </td>
-                    <td>+1 63728 3467</td>
-                    <td>04</td>
-                    <td>60</td>
-                    <td>300</td>
-                    <td>18 Sep 2023</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Active</span>
-                    </td>
-                    <td className="action-table-data">
-                      <div className="edit-delete-action">
-                        <Link
-                          className="me-2 edit-icon p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="eye" className="feather-eye" />
-                        </Link>
-                        <Link
-                          className="me-2 p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="edit" className="feather-edit" />
-                        </Link>
-                        <Link className="confirm-text p-2" to="#">
-                          <i
-                            data-feather="trash-2"
-                            className="feather-trash-2"
-                          />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>Sincere</td>
-                    <td>
-                      <div className="userimgname">
-                        <Link to="#" className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/users/user-09.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Kevin</Link>
-                      </div>
-                    </td>
-                    <td>+1 95628 1036</td>
-                    <td>04</td>
-                    <td>26</td>
-                    <td>250</td>
-                    <td>05 Oct 2023</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Active</span>
-                    </td>
-                    <td className="action-table-data">
-                      <div className="edit-delete-action">
-                        <Link
-                          className="me-2 edit-icon p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="eye" className="feather-eye" />
-                        </Link>
-                        <Link
-                          className="me-2 p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="edit" className="feather-edit" />
-                        </Link>
-                        <Link className="confirm-text p-2" to="#">
-                          <i
-                            data-feather="trash-2"
-                            className="feather-trash-2"
-                          />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <label className="checkboxs">
-                        <input type="checkbox" />
-                        <span className="checkmarks" />
-                      </label>
-                    </td>
-                    <td>Pretty</td>
-                    <td>
-                      <div className="userimgname">
-                        <Link to="#" className="product-img">
-                          <ImageWithBasePath
-                            src="assets/img/users/user-10.jpg"
-                            alt="product"
-                          />
-                        </Link>
-                        <Link to="#">Grillo</Link>
-                      </div>
-                    </td>
-                    <td>+1 65730 1603</td>
-                    <td>04</td>
-                    <td>47</td>
-                    <td>400</td>
-                    <td>21 Nov 2023</td>
-                    <td>
-                      <span className="badge badge-linesuccess">Active</span>
-                    </td>
-                    <td className="action-table-data">
-                      <div className="edit-delete-action">
-                        <Link
-                          className="me-2 edit-icon p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="eye" className="feather-eye" />
-                        </Link>
-                        <Link
-                          className="me-2 p-2"
-                          to="#"
-                          data-bs-toggle="modal"
-                          data-bs-target="#edit-units"
-                        >
-                          <i data-feather="edit" className="feather-edit" />
-                        </Link>
-                        <Link className="confirm-text p-2" to="#">
-                          <i
-                            data-feather="trash-2"
-                            className="feather-trash-2"
-                          />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
+                  {wareHouseData?.data?.map((item, index) => (
+                    <tr key={item._id || index}>
+                      <td>{item?.label || "N/A"}</td>
+                      <td>
+                        <span className="badge bg-success">Active</span>
+                      </td>
+                      <td className="action-table-data">
+                        <div className="edit-delete-action">
+                          <Link
+                            className="me-2 edit-icon p-2"
+                            to="#"
+                            data-bs-toggle="modal"
+                            data-bs-target="#edit-units"
+                          >
+                            <i data-feather="eye" className="feather-eye" />
+                          </Link>
+                          <Link
+                            className="me-2 p-2"
+                            to="#"
+                            data-bs-toggle="modal"
+                            data-bs-target="#edit-units"
+                          >
+                            <i data-feather="edit" className="feather-edit" />
+                          </Link>
+                          <Link className="confirm-text p-2" to="#">
+                            <i
+                              data-feather="trash-2"
+                              className="feather-trash-2"
+                            />
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

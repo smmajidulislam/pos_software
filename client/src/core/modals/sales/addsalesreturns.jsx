@@ -1,231 +1,268 @@
-import { PlusCircle } from "feather-icons-react/build/IconComponents";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import ImageWithBasePath from "../../img/imagewithbasebath";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { DatePicker } from "antd";
+import Swal from "sweetalert2";
+import {
+  useCreateSalesReturnMutation,
+  useGetParchasesRetrunQuery,
+} from "../../redux/api/orderApi/orderApi";
 
 const AddSalesReturns = () => {
-  const customers = [
-    { value: "Choose Customer", label: "Choose Customer" },
-    { value: "Thomas", label: "Thomas" },
-    { value: "Benjamin", label: "Benjamin" },
-    { value: "Bruklin", label: "Bruklin" },
-  ];
-  const status = [
-    { value: "Status", label: "Status" },
-    { value: "Pending", label: "Pending" },
-    { value: "Received", label: "Received" },
+  const [refarnce, setRefarnce] = useState("");
+  const [customError, setCustomError] = useState("");
+  const [quantity, setQuantity] = useState(0);
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [perUnitDiscount, setPerUnitDiscount] = useState(0);
+  const [totalDiscount, setTotalDiscount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [payment, setPayment] = useState(0);
+  const [due, setDue] = useState(0);
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [maxQty, setMaxQty] = useState(0);
+
+  const { data: refarnces } = useGetParchasesRetrunQuery(refarnce, {
+    skip: !refarnce,
+  });
+  const [createSalesRetrun] = useCreateSalesReturnMutation();
+  const fetched = refarnces && refarnces.length > 0 ? refarnces[0] : null;
+
+  useEffect(() => {
+    if (fetched) {
+      const qty = fetched.Qty || 0;
+      const discountValue = fetched.product?.discountValue || 0;
+      const productPrice = fetched.product?.price || 0;
+
+      const perUnit = qty > 0 ? discountValue / qty : 0;
+
+      setQuantity(qty);
+      setMaxQty(qty);
+      setPerUnitDiscount(perUnit);
+      setUnitPrice(productPrice);
+      setCustomError("");
+    } else if (refarnce) {
+      setCustomError("Reference not found");
+      setQuantity(0);
+      setUnitPrice(0);
+      setPerUnitDiscount(0);
+      setPayment(0);
+    }
+  }, [refarnce, refarnces, fetched]);
+
+  useEffect(() => {
+    const discount = perUnitDiscount * quantity;
+    const total = unitPrice * quantity + discount;
+    setTotalDiscount(discount);
+    setTotalAmount(total);
+  }, [quantity, perUnitDiscount, payment, unitPrice]);
+
+  const handleQuantityChange = (e) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 0 && val <= maxQty) {
+      setQuantity(val);
+    }
+  };
+
+  const resetForm = () => {
+    setRefarnce("");
+    setCustomError("");
+    setQuantity(0);
+    setUnitPrice(0);
+    setPerUnitDiscount(0);
+    setTotalDiscount(0);
+    setTotalAmount(0);
+    setPayment(0);
+    setDue(0);
+    setSelectedStatus(null);
+    setMaxQty(0);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!fetched) {
+      Swal.fire("Error", "Please enter a valid reference.", "error");
+      return;
+    }
+
+    if (!selectedStatus) {
+      Swal.fire("Error", "Please select a status.", "error");
+      return;
+    }
+
+    if (quantity === 0) {
+      Swal.fire("Warning", "Quantity cannot be zero.", "warning");
+      return;
+    }
+    if (!refarnce || refarnce.trim() === "") {
+      Swal.fire("Error", "Please enter Reference No", "error");
+      return;
+    }
+
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to create this purchase return?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Yes, submit",
+      cancelButtonText: "Cancel",
+    });
+
+    if (confirmResult.isConfirmed) {
+      const formData = {
+        reference: refarnce,
+        product: fetched?.product?._id,
+        pos: fetched?._id,
+        quantity,
+        unitPrice,
+        discountPerUnit: perUnitDiscount,
+        totalDiscount,
+        totalAmount,
+        payment,
+        due,
+        status: selectedStatus?.value,
+      };
+
+      try {
+        const res = await createSalesRetrun(formData).unwrap();
+        console.log(res);
+      } catch (err) {
+        Swal.fire("Error", "Failed to create sales return.", "error");
+      }
+    }
+  };
+
+  const statusOptions = [
+    { value: "received", label: "Received" },
+    { value: "pending", label: "Pending" },
   ];
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-  };
   return (
     <div>
-      {/* add popup */}
-      <div className="modal fade" id="add-sales-new">
-        <div className="modal-dialog add-centered">
+      <div
+        className="modal fade"
+        id="add-sales-new"
+        tabIndex="-1"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-lg modal-dialog-centered">
           <div className="modal-content">
-            <div className="page-wrapper p-0 m-0">
-              <div className="content p-0">
-                <div className="modal-header border-0 custom-modal-header">
-                  <div className="page-title">
-                    <h4> Add Sales Return</h4>
+            <div className="modal-header border-0">
+              <h4 className="modal-title">Add Purchase Return</h4>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                onClick={resetForm} // Clear form on modal close button click
+              ></button>
+            </div>
+
+            <div className="modal-body">
+              <form onSubmit={handleSubmit}>
+                <div className="row mb-3">
+                  <div className="col-lg-4 col-md-6">
+                    <label className="form-label">Reference No</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={refarnce}
+                      onChange={(e) => setRefarnce(e.target.value)}
+                      placeholder="Reference No"
+                    />
+                    {customError && (
+                      <small className="text-danger">{customError}</small>
+                    )}
                   </div>
+                </div>
+
+                {fetched && (
+                  <div className="table-responsive">
+                    <table className="table table-bordered text-center">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Product</th>
+                          <th>Qty</th>
+                          <th>Unit Price</th>
+                          <th>Total Discount</th>
+                          <th>Grand Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>{fetched.product?.productName}</td>
+                          <td>
+                            <input
+                              type="number"
+                              value={quantity}
+                              min={0}
+                              max={maxQty}
+                              className="form-control text-center"
+                              style={{ width: "80px", margin: "auto" }}
+                              onChange={handleQuantityChange}
+                            />
+                          </td>
+                          <td>{unitPrice?.toFixed(2)}</td>
+                          <td>{totalDiscount?.toFixed(2)}</td>
+                          <td>{totalAmount?.toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                <div className="row mt-3">
+                  <div className="col-lg-4 col-md-6 mb-3">
+                    <label className="form-label">Status</label>
+                    <Select
+                      options={statusOptions}
+                      placeholder="Choose status"
+                      value={selectedStatus}
+                      onChange={setSelectedStatus}
+                    />
+                  </div>
+                  <div className="col-lg-4 col-md-6 mb-3">
+                    <label className="form-label">Payment</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={payment}
+                      onChange={(e) =>
+                        setPayment(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
+                  <div className="col-lg-4 col-md-6 mb-3">
+                    <label className="form-label">Due</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={due.toFixed(2)}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-footer mt-4">
                   <button
                     type="button"
-                    className="close"
+                    className="btn btn-secondary me-2"
                     data-bs-dismiss="modal"
-                    aria-label="Close"
+                    onClick={resetForm}
                   >
-                    <span aria-hidden="true">×</span>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    data-bs-dismiss="modal"
+                    className="btn btn-primary"
+                  >
+                    Submit
                   </button>
                 </div>
-                <div className="card">
-                  <div className="card-body">
-                    <form>
-                      <div className="row">
-                        <div className="col-lg-4 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label className="form-label">Customer Name</label>
-                            <div className="row">
-                              <div className="col-lg-10 col-sm-10 col-10">
-                                <Select
-                                  className="select"
-                                  options={customers}
-                                  placeholder="Choose Customer"
-                                />
-                              </div>
-                              <div className="col-lg-2 col-sm-2 col-2 ps-0">
-                                <div className="add-icon">
-                                  <Link to="#" className="choose-add">
-                                    <PlusCircle className="feather-plus-circles" />
-                                  </Link>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-4 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label>Date</label>
-                            <div className="input-groupicon calender-input">
-                              <DatePicker
-                                selected={selectedDate}
-                                onChange={handleDateChange}
-                                type="date"
-                                className="filterdatepicker"
-                                dateFormat="dd-MM-yyyy"
-                                placeholder="Choose Date"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-4 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label className="form-label">Reference No.</label>
-                            <input type="text" className="form-control" />
-                          </div>
-                        </div>
-                        <div className="col-lg-12 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label>Product Name</label>
-                            <div className="input-groupicon select-code">
-                              <input
-                                type="text"
-                                placeholder="Please type product code and select"
-                              />
-                              <div className="addonset">
-                                <ImageWithBasePath
-                                  src="assets/img/icons/qrcode-scan.svg"
-                                  alt="img"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="table-responsive no-pagination">
-                        <table className="table  datanew">
-                          <thead>
-                            <tr>
-                              <th>Product Name</th>
-                              <th>Net Unit Price($) </th>
-                              <th>Stock</th>
-                              <th>QTY </th>
-                              <th>Discount($) </th>
-                              <th>Tax %</th>
-                              <th>Subtotal ($)</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td />
-                              <td />
-                              <td />
-                              <td />
-                              <td />
-                              <td />
-                              <td />
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="row">
-                        <div className="col-lg-6 ms-auto">
-                          <div className="total-order w-100 max-widthauto m-auto mb-4">
-                            <ul>
-                              <li>
-                                <h4>Order Tax</h4>
-                                <h5>$ 0.00</h5>
-                              </li>
-                              <li>
-                                <h4>Discount</h4>
-                                <h5>$ 0.00</h5>
-                              </li>
-                              <li>
-                                <h4>Shipping</h4>
-                                <h5>$ 0.00</h5>
-                              </li>
-                              <li>
-                                <h4>Grand Total</h4>
-                                <h5>$ 0.00</h5>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col-lg-3 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label>Order Tax</label>
-                            <div className="input-groupicon select-code">
-                              <input
-                                type="text"
-                                defaultValue={0}
-                                className="p-2"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-3 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label>Discount</label>
-                            <div className="input-groupicon select-code">
-                              <input
-                                type="text"
-                                defaultValue={0}
-                                className="p-2"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-3 col-sm-6 col-12">
-                          <div className="input-blocks">
-                            <label>Shipping</label>
-                            <div className="input-groupicon select-code">
-                              <input
-                                type="text"
-                                defaultValue={0}
-                                className="p-2"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="col-lg-3 col-sm-6 col-12">
-                          <div className="input-blocks mb-5">
-                            <label>Status</label>
-                            <Select
-                              className="select"
-                              options={status}
-                              placeholder="Choose"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-12 text-end">
-                          <button
-                            type="button"
-                            className="btn btn-cancel add-cancel me-3"
-                            data-bs-dismiss="modal"
-                          >
-                            Cancel
-                          </button>
-                          <Link to="#" className="btn btn-submit add-sale">
-                            Submit
-                          </Link>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
-      {/* /add popup */}
     </div>
   );
 };

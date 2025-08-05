@@ -11,7 +11,7 @@ const PosSchema = new mongoose.Schema(
 
     admin: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // Admin reference
+      ref: "User",
       required: true,
     },
     salesmans: [
