@@ -101,6 +101,10 @@ const {
   createSalesReturn,
   getAllSalesReturns,
 } = require("../controller/sellsReturn.controller");
+const {
+  getUserProfile,
+  upsertUserProfile,
+} = require("../controller/profile.controller");
 
 // auth routes
 router.post("/signup", signUp);
@@ -164,7 +168,11 @@ router.get("/supllier", getSuppliers);
 router.get("/supllier/:id", getSupplierById);
 router.put("/supllier/:id", updateSupplier);
 router.delete("/supllier/:id", deleteSupplier);
+// admin profile
+router.post("/users-profile", upsertUserProfile);
+router.get("/users-profile", getUserProfile);
 // users route
+
 router.post("/user", createUser);
 router.get("/user", getUsers);
 router.get("/user/:id", getUserById);

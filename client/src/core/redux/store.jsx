@@ -15,6 +15,7 @@ import { parchaceApi } from "./api/purchageApi/purchaceApi";
 import { paymentApi } from "./api/paymentApi/paymentApi";
 import { sellInvoiceApi } from "./api/sellsInvoice/sellInvoice";
 import { homepageApi } from "./api/homepageApi/homepageApi";
+import { userProfileApi } from "./api/adminProfile/adminProfile";
 import posCartReducer from "./actions/orderAction";
 
 const store = configureStore({
@@ -36,6 +37,7 @@ const store = configureStore({
     [paymentApi.reducerPath]: paymentApi.reducer,
     [sellInvoiceApi.reducerPath]: sellInvoiceApi.reducer,
     [homepageApi.reducerPath]: homepageApi.reducer,
+    [userProfileApi.reducerPath]: userProfileApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -53,7 +55,8 @@ const store = configureStore({
       parchaceApi.middleware,
       paymentApi.middleware,
       sellInvoiceApi.middleware,
-      homepageApi.middleware
+      homepageApi.middleware,
+      userProfileApi.middleware
     ),
 });
 
