@@ -6,6 +6,7 @@ import { DatePicker } from "antd";
 import Addunits from "../../core/modals/inventory/addunits";
 import AddCategory from "../../core/modals/inventory/addcategory";
 import AddBrand from "../../core/modals/addbrand";
+import Sawal from "sweetalert2";
 import {
   ArrowLeft,
   Calendar,
@@ -31,7 +32,6 @@ import { useGetVariantsQuery } from "../../core/redux/api/variantApi/variantApi"
 import { useCreateProductMutation } from "../../core/redux/api/productapi/productApi";
 import { uploadToCloudinary } from "../../utils/cloudnary";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
-import { toast } from "react-toastify";
 
 const AddProduct = () => {
   const route = all_routes;
@@ -75,12 +75,31 @@ const AddProduct = () => {
     expiryDate: new Date(),
     quantityAlert: "",
   });
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase() // ছোট হাতের অক্ষর
+      .replace(/[^a-z0-9\s-]/g, "") // special character বাদ
+      .trim() // শুরু ও শেষে ফাকা স্পেস বাদ
+      .replace(/\s+/g, "-") // space -> dash
+      .slice(0, 15); // প্রথম ১৫ অক্ষর
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProduct((prevProduct) => ({
-      ...prevProduct,
-      [name]: value,
-    }));
+
+    if (name === "productName") {
+      const newSlug = generateSlug(value);
+      setProduct({
+        ...product,
+        productName: value,
+        slug: newSlug,
+      });
+    } else {
+      setProduct({
+        ...product,
+        [name]: value,
+      });
+    }
   };
 
   const handleCheckboxChange = (e) => {
@@ -118,7 +137,12 @@ const AddProduct = () => {
         images: [...prev.images, ...newImages],
       }));
     } catch (err) {
-      toast.error(err.message || "Something went wrong!");
+      Sawal.fire({
+        icon: "error",
+        title: "Image not uploaded",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     }
   };
 
@@ -140,7 +164,12 @@ const AddProduct = () => {
     try {
       await createProduct(product).unwrap();
 
-      toast.success("Product created successfully!");
+      Sawal.fire({
+        icon: "success",
+        title: "Product created successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
       setProduct({
         store: "",
         warehouse: "",
@@ -172,7 +201,12 @@ const AddProduct = () => {
         quantityAlert: "",
       });
     } catch (error) {
-      toast.error(error.message || "Something went wrong in product creation!");
+      Sawal.fire({
+        icon: "error",
+        title: error?.data?.message || "Product not created",
+        showConfirmButton: false,
+        timer: 1500,
+      });
     }
   };
 
@@ -225,14 +259,10 @@ const AddProduct = () => {
       skip: !pos?._id,
     }
   );
-  const {
-    data: wareHouseData,
-    isLoading: wareHouseLoading,
-    error,
-  } = useGetWareHousesQuery(pos?._id, {
-    skip: !pos?._id,
-  });
-  console.log(wareHouseData, error);
+  const { data: wareHouseData, isLoading: wareHouseLoading } =
+    useGetWareHousesQuery(pos?._id, {
+      skip: !pos?._id,
+    });
   const { data: variantItems, isLoading: variantLoading } = useGetVariantsQuery(
     { search: "", status: "", date: "", sort: "", pos: pos?._id },
     {
@@ -251,12 +281,7 @@ const AddProduct = () => {
     { value: "transactionalSelling", label: "Transactional selling" },
     { value: "solutionSelling", label: "Solution selling" },
   ];
-  const barcodesymbol = [
-    { value: "choose", label: "Choose" },
-    { value: "code34", label: "Code34" },
-    { value: "code35", label: "Code35" },
-    { value: "code36", label: "Code36" },
-  ];
+
   const taxtype = [
     { value: "exclusive", label: "Exclusive" },
     { value: "salesTax", label: "Sales Tax" },
@@ -364,6 +389,22 @@ const AddProduct = () => {
     variantLoading,
     variantItems,
   ]);
+  const generateCode = (method) => {
+    const randomNumber = Math.floor(1000 + Math.random() * 9000); // 1000 - 9999
+    if (method === "SKU") {
+      return `SKU-${randomNumber}`;
+    } else {
+      return `REF-${randomNumber}`;
+    }
+  };
+  const handleGenerateCode = (field, isSku) => {
+    const code = isSku ? generateCode("SKU") : generateCode();
+    setProduct((prev) => ({
+      ...prev,
+      [field]: code,
+    }));
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content">
@@ -495,7 +536,7 @@ const AddProduct = () => {
                               name="slug"
                               className="form-control"
                               value={product.slug}
-                              onChange={handleInputChange}
+                              readOnly
                             />
                           </div>
                         </div>
@@ -510,12 +551,12 @@ const AddProduct = () => {
                               value={product.sku}
                               onChange={handleInputChange}
                             />
-                            <Link
-                              to={route.addproduct}
+                            <p
+                              onClick={() => handleGenerateCode("sku", true)}
                               className="btn btn-primaryadd"
                             >
                               Generate Code
-                            </Link>
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -670,25 +711,6 @@ const AddProduct = () => {
                       </div>
                       <div className="row">
                         <div className="col-lg-6 col-sm-6 col-12">
-                          <div className="mb-3 add-product">
-                            <label className="form-label">
-                              Barcode Symbology
-                            </label>
-                            <Select
-                              className="select"
-                              options={barcodesymbol}
-                              placeholder="Choose"
-                              value={barcodesymbol.find(
-                                (option) =>
-                                  option.value === product.barCodeSymbology
-                              )}
-                              onChange={(option) => {
-                                handleSelectChange("barCodeSymbology", option);
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-sm-6 col-12">
                           <div className="input-blocks add-product list">
                             <label>Item Code</label>
                             <input
@@ -699,12 +721,12 @@ const AddProduct = () => {
                               value={product.itemCode}
                               onChange={handleInputChange}
                             />
-                            <Link
-                              to={route.addproduct}
+                            <p
+                              onClick={() => handleGenerateCode("itemCode")}
                               className="btn btn-primaryadd"
                             >
                               Generate Code
-                            </Link>
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -841,19 +863,7 @@ const AddProduct = () => {
                               </div>
                             </div>
                             {/*  */}
-                            <div className="col-lg-3 col-sm-6 col-12">
-                              <div className="input-blocks add-product">
-                                <label>Discount Value</label>
-                                <input
-                                  type="text"
-                                  name="discountValue"
-                                  placeholder="Choose"
-                                  className="form-control"
-                                  onChange={handleInputChange}
-                                  value={product.discountValue}
-                                />
-                              </div>
-                            </div>
+
                             <div className="col-lg-3 col-sm-6 col-12">
                               <div className="input-blocks add-product">
                                 <label>Tax Type</label>
@@ -1305,6 +1315,19 @@ const AddProduct = () => {
                                 onChange={(option) =>
                                   handleSelectChange("discountType", option)
                                 }
+                              />
+                            </div>
+                          </div>
+                          <div className="col-lg-3 col-sm-6 col-12">
+                            <div className="input-blocks add-product">
+                              <label>Discount Value</label>
+                              <input
+                                type="text"
+                                name="discountValue"
+                                placeholder="Choose"
+                                className="form-control"
+                                onChange={handleInputChange}
+                                value={product.discountValue}
                               />
                             </div>
                           </div>
