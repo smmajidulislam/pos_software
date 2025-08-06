@@ -22,6 +22,8 @@ import {
   addProduct,
   removeProduct,
   clearCart,
+  decrementQty,
+  incrementQty,
 } from "../../core/redux/actions/orderAction";
 import { useSelector } from "react-redux";
 import { useGetCategoriesQuery } from "../../core/redux/api/categoryApi/categoryApi";
@@ -35,7 +37,6 @@ const Pos = () => {
   const [mainCategoryCount, setMainCategoryCount] = useState(0);
   const [mainCategoryListShowing, setMainCategoryListShowing] = useState([]);
   const [catchCategoryId, setCatchCategoryId] = useState("allCategory");
-  const [quantity, setQuantity] = useState(1);
   const [customers, setCustomers] = useState([]);
   const [paidPayment, setPaidPayment] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -97,28 +98,28 @@ const Pos = () => {
 
   const orderTax = useMemo(() => {
     return reduxStateOrders?.products.reduce(
-      (acc, curr) => acc + curr.taxValue * quantity,
+      (acc, curr) => acc + curr.taxValue * curr.quantity,
       0
     );
-  }, [reduxStateOrders?.products, quantity]);
+  }, [reduxStateOrders?.products]);
   const discountAmount = useMemo(() => {
     return reduxStateOrders?.products.reduce(
-      (acc, curr) => acc + curr.discountValue * quantity,
+      (acc, curr) => acc + curr.discountValue * curr.quantity,
       0
     );
-  }, [reduxStateOrders?.products, quantity]);
+  }, [reduxStateOrders?.products]);
   const shippingValue = useMemo(() => {
     return reduxStateOrders?.products.reduce(
-      (acc, curr) => acc + curr?.shippingValue * quantity,
+      (acc, curr) => acc + curr?.shippingValue * curr.quantity,
       0
     );
-  }, [reduxStateOrders?.products, quantity]);
+  }, [reduxStateOrders?.products]);
   const subTotal = useMemo(() => {
     return reduxStateOrders?.products.reduce(
-      (acc, curr) => acc + curr?.price * quantity,
+      (acc, curr) => acc + curr?.price * curr.quantity,
       0
     );
-  }, [reduxStateOrders?.products, quantity]);
+  }, [reduxStateOrders?.products]);
   const subTotalWithOutDiscount = useMemo(() => {
     const total =
       Number(subTotal) + Number(orderTax) + (Number(shippingValue) || 0);
@@ -132,7 +133,17 @@ const Pos = () => {
   }, [grandTotal, paidPayment]);
 
   // data management end
-
+  const getStyle = (method) => {
+    return {
+      border: paymentMethod === method ? "2px solid #0d6efd" : "2px solid #ddd",
+      borderRadius: "8px",
+      padding: "20px",
+      textAlign: "center",
+      cursor: "pointer",
+      transition: "all 0.3s ease",
+      backgroundColor: paymentMethod === method ? "#f0f8ff" : "#fff",
+    };
+  };
   const tax = [
     { value: "exclusive", label: "Exclusive" },
     { value: "inclusive", label: "Inclusive" },
@@ -147,17 +158,10 @@ const Pos = () => {
   ];
 
   const handleDecrement = (product) => {
-    if (
-      (product.stock >= 1 && quantity < product.stock && quantity > 1) ||
-      (product.stock >= 1 && quantity <= product.stock && quantity > 1)
-    ) {
-      setQuantity(quantity - 1);
-    }
+    dispatch(decrementQty(product._id));
   };
   const handleIncrement = (product) => {
-    if (product.stock >= 1 && quantity < product.stock) {
-      setQuantity(quantity + 1);
-    }
+    dispatch(incrementQty(product._id));
   };
   const handleOrderSubmit = async (statusType) => {
     try {
@@ -482,11 +486,7 @@ const Pos = () => {
                         key={index}
                         className="product-list d-flex align-items-center justify-content-between"
                       >
-                        <div
-                          className="d-flex align-items-center product-info"
-                          data-bs-toggle="modal"
-                          data-bs-target="#products"
-                        >
+                        <div className="d-flex align-items-center product-info">
                           <Link to="#" className="img-bg">
                             <ImageWithBasePath
                               src={item?.images[0]?.url}
@@ -527,7 +527,7 @@ const Pos = () => {
                             type="text"
                             className="form-control text-center"
                             name="qty"
-                            value={quantity}
+                            value={item?.quantity}
                             readOnly
                           />
                           <OverlayTrigger
@@ -662,7 +662,7 @@ const Pos = () => {
                   <div className="row d-flex align-items-center justify-content-center methods">
                     <div className="col-md-6 col-lg-4 item">
                       <div
-                        className="default-cover"
+                        style={getStyle("cash")}
                         onClick={() => setPaymentMethod("cash")}
                       >
                         <Link to="#">
@@ -676,7 +676,7 @@ const Pos = () => {
                     </div>
                     <div className="col-md-6 col-lg-4 item">
                       <div
-                        className="default-cover"
+                        style={getStyle("card")}
                         onClick={() => setPaymentMethod("card")}
                       >
                         <Link to="#">
@@ -684,13 +684,13 @@ const Pos = () => {
                             src="assets/img/icons/credit-card.svg"
                             alt="Payment Method"
                           />
-                          <span>Debit Card</span>
+                          <span>Card</span>
                         </Link>
                       </div>
                     </div>
                     <div className="col-md-6 col-lg-4 item">
                       <div
-                        className="default-cover"
+                        style={getStyle("scan")}
                         onClick={() => setPaymentMethod("scan")}
                       >
                         <Link to="#">
@@ -713,8 +713,6 @@ const Pos = () => {
                   <button
                     type="button"
                     className="btn btn-info btn-icon flex-fill"
-                    data-bs-toggle="modal"
-                    data-bs-target="#hold-order"
                     onClick={() => handleOrderSubmit("hold")}
                   >
                     <span className="me-1 d-flex align-items-center">
@@ -1160,60 +1158,7 @@ const Pos = () => {
           </div>
         </div>
       </div>
-      {/* Hold */}
-      <div
-        className="modal fade modal-default pos-modal"
-        id="hold-order"
-        aria-labelledby="hold-order"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header p-4">
-              <h5>Hold order</h5>
-              <button
-                type="button"
-                className="close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            </div>
-            <div className="modal-body p-4">
-              <form>
-                <h2 className="text-center p-4">4500.00</h2>
-                <div className="input-block">
-                  <label>Order Reference</label>
-                  <input
-                    className="form-control"
-                    type="text"
-                    defaultValue=""
-                    placeholder=""
-                  />
-                </div>
-                <p>
-                  The current order will be set on hold. You can retreive this
-                  order from the pending order button. Providing a reference to
-                  it might help you to identify the order more quickly.
-                </p>
-                <div className="modal-footer d-sm-flex justify-content-end">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                  >
-                    Cancel
-                  </button>
-                  <Link to="#" className="btn btn-primary">
-                    Confirm
-                  </Link>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* /Hold */}
+
       {/* Edit Product */}
       <div
         className="modal fade modal-default pos-modal"

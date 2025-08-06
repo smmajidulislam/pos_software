@@ -40,6 +40,18 @@ const posCartSlice = createSlice({
       state.discountValue = action.payload.value;
       state.discountType = action.payload.type;
     },
+    incrementQty: (state, action) => {
+      const product = state.products.find((p) => p._id === action.payload);
+      if (product && product.quantity < product.stock) {
+        product.quantity += 1;
+      }
+    },
+    decrementQty: (state, action) => {
+      const product = state.products.find((p) => p._id === action.payload);
+      if (product && product.quantity > 1) {
+        product.quantity -= 1;
+      }
+    },
   },
 });
 
