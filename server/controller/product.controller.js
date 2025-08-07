@@ -159,6 +159,17 @@ exports.getProducts = async (req, res) => {
     return res.status(500).json({ message: error.message || "Server error" });
   }
 };
+exports.updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await Product.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+    return res.status(200).json({ message: "success", data });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Server error" });
+  }
+};
 
 exports.getProductById = async (req, res) => {
   try {

@@ -2,6 +2,9 @@ import {
   Box,
   ChevronUp,
   Filter,
+  Edit,
+  Eye,
+  Trash2,
   GitMerge,
   PlusCircle,
   RotateCcw,
@@ -20,6 +23,8 @@ import Table from "../../core/pagination/datatable";
 import { setToogleHeader } from "../../core/redux/action";
 import { Download } from "react-feather";
 import { usePos } from "../../hooks/PosProvider";
+import withReactContent from "sweetalert2-react-content";
+import Swal from "sweetalert2";
 import { useGetProductsQuery } from "../../core/redux/api/productapi/productApi";
 
 const ProductList = () => {
@@ -34,12 +39,12 @@ const ProductList = () => {
       skip: !pos?._id,
     }
   );
-  console.log(productData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);
   };
   const route = all_routes;
+  const MySwal = withReactContent(Swal);
   const options = [
     { value: "sortByDate", label: "Sort by Date" },
     { value: "140923", label: "14 09 23" },
@@ -70,15 +75,38 @@ const ProductList = () => {
     { value: "12500", label: "$12,500.00" },
     { value: "13000", label: "$13,000.00" }, // Replace with your actual values
   ];
+  const showConfirmationAlert = () => {
+    MySwal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      showCancelButton: true,
+      confirmButtonColor: "#00ff00",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonColor: "#ff0000",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        MySwal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          className: "btn btn-success",
+          confirmButtonText: "OK",
+          customClass: {
+            confirmButton: "btn btn-success",
+          },
+        });
+      } else {
+        MySwal.close();
+      }
+    });
+  };
 
   const columns = [
     {
       title: "Product",
       dataIndex: "productName",
       render: (text) => (
-        <span className="productimgname flex items-center gap-2">
-          <Link to="/profile">{text}</Link>
-        </span>
+        <span className="productimgname flex items-center gap-2">{text}</span>
       ),
       sorter: (a, b) => a.productName.length - b.productName.length,
     },
@@ -127,6 +155,44 @@ const ProductList = () => {
       title: "Qty",
       dataIndex: "stock",
       sorter: (a, b) => a.qty - b.qty,
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      render: (_, record) => (
+        <div className="action-table-data">
+          <div className="edit-delete-action">
+            <div className="input-block add-lists"></div>
+
+            {/* View Page */}
+            <Link
+              className="me-2 p-2"
+              to={`${route.productdetails}/${record._id}`}
+            >
+              <Eye className="feather-view" />
+            </Link>
+
+            {/* Edit Page - passing full record via state */}
+            <Link
+              className="me-2 p-2"
+              to={route.editproduct}
+              state={{ product: record }}
+            >
+              <Edit className="feather-edit" />
+            </Link>
+
+            {/* Delete Action */}
+            <Link
+              className="confirm-text p-2"
+              to="#"
+              onClick={() => showConfirmationAlert(record._id)}
+            >
+              <Trash2 className="feather-trash-2" />
+            </Link>
+          </div>
+        </div>
+      ),
+      sorter: (a, b) => a.createdby.length - b.createdby.length,
     },
   ];
 

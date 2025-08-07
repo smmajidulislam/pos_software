@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Select from "react-select";
 import { all_routes } from "../../Router/all_routes";
 import { DatePicker } from "antd";
 import Addunits from "../../core/modals/inventory/addunits";
 import AddCategory from "../../core/modals/inventory/addcategory";
 import AddBrand from "../../core/modals/addbrand";
+import Sawal from "sweetalert2";
 import {
   ArrowLeft,
   Calendar,
@@ -21,99 +22,394 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setToogleHeader } from "../../core/redux/action";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useGetAllPosQuery } from "../../core/redux/api/posApi/posApi";
+import { usePos } from "../../hooks/PosProvider";
+import { useGetCategoriesQuery } from "../../core/redux/api/categoryApi/categoryApi";
+import { useGetUnitsQuery } from "../../core/redux/api/unitApi/unitApi";
+import { useGetAllBrandsQuery } from "../../core/redux/api/brandApi/brandApi";
+import { useGetWareHousesQuery } from "../../core/redux/api/wareHouseApi/wareHouseApi";
+import { useGetVariantsQuery } from "../../core/redux/api/variantApi/variantApi";
+import { useUpdateProductMutation } from "../../core/redux/api/productapi/productApi";
+import { uploadToCloudinary } from "../../utils/cloudnary";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 
 const EditProduct = () => {
   const route = all_routes;
   const dispatch = useDispatch();
+  const location = useLocation();
+  const detaaa = location?.state?.product;
 
   const data = useSelector((state) => state.toggle_header);
+  const { data: posItems } = useGetAllPosQuery();
+  const [store, setStore] = useState([]);
+  const [warehouse, setWarehouse] = useState([]);
+  const [updateProduct] = useUpdateProductMutation();
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  const { pos } = usePos();
+
+  const [product, setProduct] = useState({
+    store: "",
+    warehouse: "",
+    productName: "",
+    slug: "",
+    sku: "",
+    category: "",
+    subCategory: "",
+    subSubCategory: "",
+    brand: "",
+    unit: "",
+    sellingType: "",
+    barCodeSymbology: "",
+    itemCode: "",
+    descriptions: "",
+    price: "",
+    parchacePrice: "",
+    discountValue: "",
+    taxType: "",
+    images: [],
+    variantAttribute: "",
+    variantValues: "red, black",
+    warranties: false,
+    manufacturer: false,
+    expiry: false,
+    discountType: "",
+    manufactureDate: new Date(),
+    expiryDate: new Date(),
+    quantityAlert: "",
+  });
+  useEffect(() => {
+    setProduct(detaaa);
+  }, [detaaa]);
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase() // ছোট হাতের অক্ষর
+      .replace(/[^a-z0-9\s-]/g, "") // special character বাদ
+      .trim() // শুরু ও শেষে ফাকা স্পেস বাদ
+      .replace(/\s+/g, "-") // space -> dash
+      .slice(0, 15); // প্রথম ১৫ অক্ষর
   };
-  const [selectedDate1, setSelectedDate1] = useState(new Date());
-  const handleDateChange1 = (date) => {
-    setSelectedDate1(date);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "productName") {
+      const newSlug = generateSlug(value);
+      setProduct({
+        ...product,
+        productName: value,
+        slug: newSlug,
+      });
+    } else {
+      setProduct({
+        ...product,
+        [name]: value,
+      });
+    }
   };
+
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setProduct((prev) => ({ ...prev, [name]: checked }));
+  };
+
+  const handleSelectChange = (name, option) => {
+    const value = option ? option.value : "";
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: value,
+    }));
+  };
+
+  const handleDateChange = (name, date) => {
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: date,
+    }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+
+    try {
+      const urls = await Promise.all(
+        files.map((file) => uploadToCloudinary(file))
+      );
+
+      const newImages = urls.map((url) => ({ url }));
+
+      setProduct((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newImages],
+      }));
+    } catch (err) {
+      Sawal.fire({
+        icon: "error",
+        title: "Image not uploaded",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    const updatedImages = product?.images.filter(
+      (_, index) => index !== indexToRemove
+    );
+
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      images: updatedImages,
+    }));
+
+    return updatedImages;
+  };
+
+  const handleFromSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateProduct({ id: product?._id, updatedData: product }).unwrap();
+
+      Sawal.fire({
+        icon: "success",
+        title: "Product updated successfully",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      setProduct({
+        store: "",
+        warehouse: "",
+        productName: "",
+        slug: "",
+        sku: "",
+        category: "",
+        subCategory: "",
+        subSubCategory: null,
+        brand: "",
+        unit: "",
+        sellingType: "",
+        barCodeSymbology: "",
+        itemCode: "",
+        descriptions: "",
+        price: "",
+        parchacePrice: "",
+        discountValue: "",
+        taxType: "",
+        images: [],
+        variantAttribute: "",
+        variantValues: "red, black",
+        warranties: false,
+        manufacturer: false,
+        expiry: false,
+        discountType: "",
+        manufactureDate: new Date(),
+        expiryDate: new Date(),
+        quantityAlert: "",
+      });
+    } catch (error) {
+      Sawal.fire({
+        icon: "error",
+        title: error?.data?.message || "Product not updated",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+  };
+
+  // variant data  state
+  const [variant, setVariant] = useState([]);
+  // main category
+  const [category, setCategory] = useState([]);
+  const [subCategory, setSubCategory] = useState([]);
+  const [subSubCategory, setSubSubCategory] = useState([]);
+  // from data mangement
+  const [unit, setUnit] = useState([]);
+  const [brand, setBrand] = useState([]);
+  const { data: mainCategoryItems, isLoading } = useGetCategoriesQuery(
+    {
+      type: "main",
+      pos: pos?._id,
+    },
+    { skip: !pos }
+  );
+
+  const { data: subCategoryItems, isLoading: subCategoryLoading } =
+    useGetCategoriesQuery(
+      { type: "sub", pos: pos?._id, parent: product?.category },
+      {
+        skip: !pos?._id || !product?.category,
+      }
+    );
+
+  const { data: subSubCategoryItems, isLoading: subSubCategoryLoading } =
+    useGetCategoriesQuery(
+      { type: "subsub", pos: pos?._id, parent: product?.subCategory },
+      {
+        skip: !pos?._id || !product?.subCategory,
+      }
+    );
+
+  const { data: brandItems, isLoading: brandLoading } = useGetAllBrandsQuery(
+    {
+      posId: pos?._id,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+  const { data: unitItems, isLoading: unitLoading } = useGetUnitsQuery(
+    {
+      posId: pos?._id,
+    },
+    {
+      skip: !pos?._id,
+    }
+  );
+  const { data: wareHouseData, isLoading: wareHouseLoading } =
+    useGetWareHousesQuery(pos?._id, {
+      skip: !pos?._id,
+    });
+  const { data: variantItems, isLoading: variantLoading } = useGetVariantsQuery(
+    { search: "", status: "", date: "", sort: "", pos: pos?._id },
+    {
+      skip: !pos?._id,
+    }
+  );
+
   const renderCollapseTooltip = (props) => (
     <Tooltip id="refresh-tooltip" {...props}>
       Collapse
     </Tooltip>
   );
-  const store = [
-    { value: "choose", label: "Choose" },
-    { value: "thomas", label: "Thomas" },
-    { value: "rasmussen", label: "Rasmussen" },
-    { value: "fredJohn", label: "Fred John" },
-  ];
-  const warehouse = [
-    { value: "choose", label: "Choose" },
-    { value: "legendary", label: "Legendary" },
-    { value: "determined", label: "Determined" },
-    { value: "sincere", label: "Sincere" },
-  ];
-  const category = [
-    { value: "choose", label: "Choose" },
-    { value: "lenovo", label: "Lenovo" },
-    { value: "electronics", label: "Electronics" },
-  ];
-  const subcategory = [
-    { value: "choose", label: "Choose" },
-    { value: "lenovo", label: "Lenovo" },
-    { value: "electronics", label: "Electronics" },
-  ];
-  const subsubcategories = [
-    { value: "Fruits", label: "Fruits" },
-    { value: "Computer", label: "Computer" },
-    { value: "Shoes", label: "Shoes" },
-  ];
-  const brand = [
-    { value: "choose", label: "Choose" },
-    { value: "nike", label: "Nike" },
-    { value: "bolt", label: "Bolt" },
-  ];
-  const unit = [
-    { value: "choose", label: "Choose" },
-    { value: "kg", label: "Kg" },
-    { value: "pc", label: "Pc" },
-  ];
+
   const sellingtype = [
     { value: "choose", label: "Choose" },
     { value: "transactionalSelling", label: "Transactional selling" },
     { value: "solutionSelling", label: "Solution selling" },
   ];
-  const barcodesymbol = [
-    { value: "choose", label: "Choose" },
-    { value: "code34", label: "Code34" },
-    { value: "code35", label: "Code35" },
-    { value: "code36", label: "Code36" },
-  ];
+
   const taxtype = [
     { value: "exclusive", label: "Exclusive" },
     { value: "salesTax", label: "Sales Tax" },
   ];
+
   const discounttype = [
     { value: "choose", label: "Choose" },
     { value: "percentage", label: "Percentage" },
     { value: "cash", label: "Cash" },
   ];
-  const discounttype1 = [
-    { value: "choose", label: "Choose" },
-    { value: "percentage", label: "Percentage" },
-    { value: "cash", label: "Cash" },
-  ];
-  const [isImageVisible, setIsImageVisible] = useState(true);
 
-  const handleRemoveProduct = () => {
-    setIsImageVisible(false);
-  };
-  const [isImageVisible1, setIsImageVisible1] = useState(true);
+  useEffect(() => {
+    if (posItems) {
+      setStore(posItems);
+    }
+  }, [posItems]);
+  useEffect(() => {
+    // parent category
+    if (mainCategoryItems?.data?.length > 0 && !isLoading) {
+      const formatted = [
+        { value: "choose", label: "Choose" },
+        ...mainCategoryItems.data.map((item) => ({
+          value: item._id,
+          label: item.name,
+        })),
+      ];
+      setCategory(formatted);
+    }
+    // sub category
+    if (subCategoryItems?.data?.length > 0 && !subCategoryLoading) {
+      const formatted = [
+        { value: "choose", label: "Choose" },
+        ...subCategoryItems.data.map((item) => ({
+          value: item._id,
+          label: item.name,
+        })),
+      ];
+      setSubCategory(formatted);
+    } else {
+      setSubCategory([]);
+    }
+    // sub sub category
+    if (subSubCategoryItems?.data?.length > 0 && !subSubCategoryLoading) {
+      const formatted = [
+        { value: "choose", label: "Choose" },
+        ...subSubCategoryItems.data.map((item) => ({
+          value: item._id,
+          label: item.name,
+        })),
+      ];
+      setSubSubCategory(formatted);
+    } else {
+      setSubSubCategory([]);
+    }
 
-  const handleRemoveProduct1 = () => {
-    setIsImageVisible1(false);
+    if (unitItems?.data?.length > 0 && !unitLoading) {
+      const formatted = [
+        { value: "choose", label: "Choose" },
+        ...unitItems.data.map((item) => ({
+          value: item._id,
+          label: item.name,
+          name: item.name,
+        })),
+      ];
+      setUnit(formatted);
+    }
+    if (brandItems?.data?.length > 0 && !brandLoading) {
+      const formatted = [
+        { value: "choose", label: "Choose" },
+        ...brandItems.data.map((item) => ({
+          value: item._id,
+          label: item.name,
+          name: item.name,
+        })),
+      ];
+      setBrand(formatted);
+    }
+    if (wareHouseData?.data?.length > 0 && !wareHouseLoading) {
+      const formatted = [
+        ...wareHouseData.data.map((item) => ({
+          value: item._id,
+          label: item.label,
+          name: item.label,
+        })),
+      ];
+      setWarehouse(formatted);
+    }
+    if (variantItems?.variants?.length > 0 && !variantLoading) {
+      const allValues = variantItems.variants.flatMap((v) => v.values);
+      setVariant(allValues);
+    }
+  }, [
+    mainCategoryItems,
+    isLoading,
+    subCategoryLoading,
+    subCategoryItems,
+    subSubCategoryItems,
+    subSubCategoryLoading,
+    unitItems,
+    unitLoading,
+    brandLoading,
+    brandItems,
+    wareHouseLoading,
+    wareHouseData,
+    variantLoading,
+    variantItems,
+  ]);
+  const generateCode = (method) => {
+    const randomNumber = Math.floor(1000 + Math.random() * 9000); // 1000 - 9999
+    if (method === "SKU") {
+      return `SKU-${randomNumber}`;
+    } else {
+      return `REF-${randomNumber}`;
+    }
   };
+  const handleGenerateCode = (field, isSku) => {
+    const code = isSku ? generateCode("SKU") : generateCode();
+    setProduct((prev) => ({
+      ...prev,
+      [field]: code,
+    }));
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content">
@@ -151,7 +447,7 @@ const EditProduct = () => {
           </ul>
         </div>
         {/* /add */}
-        <form>
+        <form onSubmit={handleFromSubmit}>
           <div className="card">
             <div className="card-body add-product pb-0">
               <div
@@ -189,11 +485,21 @@ const EditProduct = () => {
                         <div className="col-lg-4 col-sm-6 col-12">
                           <div className="mb-3 add-product">
                             <label className="form-label">Store</label>
-                            <Select
-                              className="select"
-                              options={store}
-                              placeholder="Choose"
-                            />
+                            <select
+                              className="form-control"
+                              name="store"
+                              value={product?.store}
+                              onChange={handleInputChange}
+                            >
+                              <option value="" disabled>
+                                Choose
+                              </option>
+                              {store.map((item) => (
+                                <option key={item?._id} value={item?._id}>
+                                  {item.label}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                         <div className="col-lg-4 col-sm-6 col-12">
@@ -202,7 +508,13 @@ const EditProduct = () => {
                             <Select
                               className="select"
                               options={warehouse}
-                              placeholder="Legendary"
+                              placeholder="Choose"
+                              value={warehouse?.find(
+                                (option) => option?.value === product?.warehouse
+                              )}
+                              onChange={(option) =>
+                                handleSelectChange("warehouse", option)
+                              }
                             />
                           </div>
                         </div>
@@ -211,13 +523,25 @@ const EditProduct = () => {
                         <div className="col-lg-4 col-sm-6 col-12">
                           <div className="mb-3 add-product">
                             <label className="form-label">Product Name</label>
-                            <input type="text" className="form-control" />
+                            <input
+                              type="text"
+                              name="productName"
+                              className="form-control"
+                              value={product?.productName}
+                              onChange={handleInputChange}
+                            />
                           </div>
                         </div>
                         <div className="col-lg-4 col-sm-6 col-12">
                           <div className="mb-3 add-product">
                             <label className="form-label">Slug</label>
-                            <input type="text" className="form-control" />
+                            <input
+                              type="text"
+                              name="slug"
+                              className="form-control"
+                              value={product?.slug}
+                              readOnly
+                            />
                           </div>
                         </div>
                         <div className="col-lg-4 col-sm-6 col-12">
@@ -225,15 +549,18 @@ const EditProduct = () => {
                             <label>SKU</label>
                             <input
                               type="text"
+                              name="sku"
                               className="form-control list"
                               placeholder="Enter SKU"
+                              value={product?.sku}
+                              onChange={handleInputChange}
                             />
-                            <Link
-                              to={route.addproduct}
+                            <p
+                              onClick={() => handleGenerateCode("sku", true)}
                               className="btn btn-primaryadd"
                             >
                               Generate Code
-                            </Link>
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -252,10 +579,23 @@ const EditProduct = () => {
                                   <span>Add New</span>
                                 </Link>
                               </div>
+
                               <Select
                                 className="select"
                                 options={category}
-                                placeholder="Lenovo"
+                                placeholder="Choose"
+                                value={category.find(
+                                  (option) =>
+                                    option.value === product?.category?.name
+                                )}
+                                onChange={(option) => {
+                                  handleSelectChange("category", option);
+                                  setProduct((prev) => ({
+                                    ...prev,
+                                    subCategory: "",
+                                    subSubCategory: "",
+                                  }));
+                                }}
                               />
                             </div>
                           </div>
@@ -264,8 +604,19 @@ const EditProduct = () => {
                               <label className="form-label">Sub Category</label>
                               <Select
                                 className="select"
-                                options={subcategory}
-                                placeholder="Lenovo"
+                                options={subCategory}
+                                placeholder="Choose"
+                                value={subCategory.find(
+                                  (option) =>
+                                    option.value === product?.subCategory
+                                )}
+                                onChange={(option) => {
+                                  handleSelectChange("subCategory", option);
+                                  setProduct((prev) => ({
+                                    ...prev,
+                                    subSubCategory: "",
+                                  }));
+                                }}
                               />
                             </div>
                           </div>
@@ -276,8 +627,15 @@ const EditProduct = () => {
                               </label>
                               <Select
                                 className="select"
-                                options={subsubcategories}
-                                placeholder="Computer"
+                                options={subSubCategory}
+                                placeholder="Choose"
+                                value={subSubCategory.find(
+                                  (option) =>
+                                    option.value === product?.subSubCategory
+                                )}
+                                onChange={(option) =>
+                                  handleSelectChange("subSubCategory", option)
+                                }
                               />
                             </div>
                           </div>
@@ -301,7 +659,14 @@ const EditProduct = () => {
                               <Select
                                 className="select"
                                 options={brand}
-                                placeholder="Nike"
+                                placeholder="Choose"
+                                value={brand.find(
+                                  (option) =>
+                                    option.value === product?.brand?.name
+                                )}
+                                onChange={(option) => {
+                                  handleSelectChange("brand", option);
+                                }}
                               />
                             </div>
                           </div>
@@ -321,7 +686,13 @@ const EditProduct = () => {
                               <Select
                                 className="select"
                                 options={unit}
-                                placeholder="Kg"
+                                placeholder="Choose"
+                                value={unit?.find(
+                                  (option) => option?.value === product?.unit
+                                )}
+                                onChange={(option) => {
+                                  handleSelectChange("unit", option);
+                                }}
                               />
                             </div>
                           </div>
@@ -331,7 +702,14 @@ const EditProduct = () => {
                               <Select
                                 className="select"
                                 options={sellingtype}
-                                placeholder="Solution selling"
+                                placeholder="Choose"
+                                value={sellingtype.find(
+                                  (option) =>
+                                    option.value === product?.sellingType
+                                )}
+                                onChange={(option) => {
+                                  handleSelectChange("sellingType", option);
+                                }}
                               />
                             </div>
                           </div>
@@ -339,31 +717,22 @@ const EditProduct = () => {
                       </div>
                       <div className="row">
                         <div className="col-lg-6 col-sm-6 col-12">
-                          <div className="mb-3 add-product">
-                            <label className="form-label">
-                              Barcode Symbology
-                            </label>
-                            <Select
-                              className="select"
-                              options={barcodesymbol}
-                              placeholder="Code34"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-sm-6 col-12">
                           <div className="input-blocks add-product list">
                             <label>Item Code</label>
                             <input
                               type="text"
+                              name="itemCode"
                               className="form-control list"
                               placeholder="Please Enter Item Code"
+                              value={product?.itemCode}
+                              onChange={handleInputChange}
                             />
-                            <Link
-                              to={route.addproduct}
+                            <p
+                              onClick={() => handleGenerateCode("itemCode")}
                               className="btn btn-primaryadd"
                             >
                               Generate Code
-                            </Link>
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -373,8 +742,11 @@ const EditProduct = () => {
                           <label>Description</label>
                           <textarea
                             className="form-control h-100"
+                            name="descriptions"
                             rows={5}
-                            defaultValue={""}
+                            placeholder="Please Enter Description"
+                            value={product?.descriptions}
+                            onChange={handleInputChange}
                           />
                           <p className="mt-1">Maximum 60 Characters</p>
                         </div>
@@ -471,53 +843,52 @@ const EditProduct = () => {
                           aria-labelledby="pills-home-tab"
                         >
                           <div className="row">
-                            <div className="col-lg-4 col-sm-6 col-12">
-                              <div className="input-blocks add-product">
-                                <label>Quantity</label>
-                                <input type="text" className="form-control" />
-                              </div>
-                            </div>
-                            <div className="col-lg-4 col-sm-6 col-12">
+                            <div className="col-lg-3 col-sm-6 col-12">
                               <div className="input-blocks add-product">
                                 <label>Price</label>
-                                <input type="text" className="form-control" />
+                                <input
+                                  type="text"
+                                  name="price"
+                                  className="form-control"
+                                  onChange={handleInputChange}
+                                  value={product?.price}
+                                />
                               </div>
                             </div>
-                            <div className="col-lg-4 col-sm-6 col-12">
+                            {/*  */}
+                            <div className="col-lg-3 col-sm-6 col-12">
+                              <div className="input-blocks add-product">
+                                <label>Parchace Price</label>
+                                <input
+                                  type="text"
+                                  name="parchacePrice"
+                                  className="form-control"
+                                  onChange={handleInputChange}
+                                  value={product?.parchacePrice}
+                                />
+                              </div>
+                            </div>
+                            {/*  */}
+
+                            <div className="col-lg-3 col-sm-6 col-12">
                               <div className="input-blocks add-product">
                                 <label>Tax Type</label>
                                 <Select
                                   className="select"
                                   options={taxtype}
                                   placeholder="Select Option"
+                                  value={taxtype.find(
+                                    (option) =>
+                                      option.value === product?.taxType
+                                  )}
+                                  onChange={(option) => {
+                                    handleSelectChange("taxType", option);
+                                  }}
                                 />
                               </div>
                             </div>
                           </div>
-                          <div className="row">
-                            <div className="col-lg-4 col-sm-6 col-12">
-                              <div className="input-blocks add-product">
-                                <label>Discount Type</label>
-                                <Select
-                                  className="select"
-                                  options={discounttype}
-                                  placeholder="Choose"
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-4 col-sm-6 col-12">
-                              <div className="input-blocks add-product">
-                                <label>Discount Value</label>
-                                <input type="text" placeholder="Choose" />
-                              </div>
-                            </div>
-                            <div className="col-lg-4 col-sm-6 col-12">
-                              <div className="input-blocks add-product">
-                                <label>Quantity Alert</label>
-                                <input type="text" className="form-control" />
-                              </div>
-                            </div>
-                          </div>
+                          <div className="row"></div>
                           <div
                             className="accordion-card-one accordion"
                             id="accordionExample3"
@@ -559,41 +930,39 @@ const EditProduct = () => {
                                       <div className="add-choosen">
                                         <div className="input-blocks">
                                           <div className="image-upload">
-                                            <input type="file" />
+                                            <input
+                                              type="file"
+                                              multiple
+                                              onChange={handleImageUpload}
+                                            />
                                             <div className="image-uploads">
                                               <PlusCircle className="plus-down-add me-0" />
                                               <h4>Add Images</h4>
                                             </div>
                                           </div>
                                         </div>
-                                        {isImageVisible1 && (
-                                          <div className="phone-img">
+                                        {product?.images.map((img, index) => (
+                                          <div
+                                            className="phone-img"
+                                            key={index}
+                                          >
                                             <ImageWithBasePath
-                                              src="assets/img/products/phone-add-2.png"
+                                              src={img?.url}
                                               alt="image"
+                                              isBase={true}
+                                              height={100}
+                                              width={100}
                                             />
                                             <Link to="#">
                                               <X
                                                 className="x-square-add remove-product"
-                                                onClick={handleRemoveProduct1}
+                                                onClick={() =>
+                                                  handleRemoveImage(index)
+                                                }
                                               />
                                             </Link>
                                           </div>
-                                        )}
-                                        {isImageVisible && (
-                                          <div className="phone-img">
-                                            <ImageWithBasePath
-                                              src="assets/img/products/phone-add-1.png"
-                                              alt="image"
-                                            />
-                                            <Link to="#">
-                                              <X
-                                                className="x-square-add remove-product"
-                                                onClick={handleRemoveProduct}
-                                              />
-                                            </Link>
-                                          </div>
-                                        )}
+                                        ))}
                                       </div>
                                     </div>
                                   </div>
@@ -609,31 +978,23 @@ const EditProduct = () => {
                           aria-labelledby="pills-profile-tab"
                         >
                           <div className="row select-color-add">
-                            <div className="col-lg-6 col-sm-6 col-12">
+                            <div className="col-lg-4 col-sm-6 col-12">
                               <div className="input-blocks add-product">
                                 <label>Variant Attribute</label>
                                 <div className="row">
                                   <div className="col-lg-10 col-sm-10 col-10">
                                     <select
-                                      className="form-control variant-select select-option"
-                                      id="colorSelect"
+                                      className="border p-2 rounded w-full"
+                                      name="variantAttribute"
+                                      value={product?.variantAttribute}
+                                      onChange={handleInputChange}
                                     >
-                                      <option>Choose</option>
-                                      <option>Color</option>
-                                      <option value="red">Red</option>
-                                      <option value="black">Black</option>
+                                      {variant.map((value, index) => (
+                                        <option key={index} value={value}>
+                                          {value}
+                                        </option>
+                                      ))}
                                     </select>
-                                  </div>
-                                  <div className="col-lg-2 col-sm-2 col-2 ps-0">
-                                    <div className="add-icon tab">
-                                      <Link
-                                        className="btn btn-filter"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#add-units"
-                                      >
-                                        <PlusCircle className="feather feather-plus-circle" />
-                                      </Link>
-                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -649,8 +1010,9 @@ const EditProduct = () => {
                                         id="inputBox"
                                         type="text"
                                         data-role="tagsinput"
-                                        name="specialist"
-                                        defaultValue="red, black"
+                                        name="variantValues"
+                                        value={product?.variantValues}
+                                        onChange={handleInputChange}
                                       />
                                     </div>
                                   </div>
@@ -914,17 +1276,32 @@ const EditProduct = () => {
                         <div className="custom-filed">
                           <div className="input-block add-lists">
                             <label className="checkboxs">
-                              <input type="checkbox" />
+                              <input
+                                type="checkbox"
+                                name="warranties"
+                                checked={product?.warranties}
+                                onChange={handleCheckboxChange}
+                              />
                               <span className="checkmarks" />
                               Warranties
                             </label>
                             <label className="checkboxs">
-                              <input type="checkbox" />
+                              <input
+                                type="checkbox"
+                                name="manufacturer"
+                                checked={product?.manufacturer}
+                                onChange={handleCheckboxChange}
+                              />
                               <span className="checkmarks" />
                               Manufacturer
                             </label>
                             <label className="checkboxs">
-                              <input type="checkbox" />
+                              <input
+                                type="checkbox"
+                                name="expiry"
+                                checked={product?.expiry}
+                                onChange={handleCheckboxChange}
+                              />
                               <span className="checkmarks" />
                               Expiry
                             </label>
@@ -936,8 +1313,28 @@ const EditProduct = () => {
                               <label>Discount Type</label>
                               <Select
                                 className="select"
-                                options={discounttype1}
+                                options={discounttype}
                                 placeholder="Choose"
+                                value={discounttype?.find(
+                                  (option) =>
+                                    option?.value === product?.discountType
+                                )}
+                                onChange={(option) =>
+                                  handleSelectChange("discountType", option)
+                                }
+                              />
+                            </div>
+                          </div>
+                          <div className="col-lg-3 col-sm-6 col-12">
+                            <div className="input-blocks add-product">
+                              <label>Discount Value</label>
+                              <input
+                                type="text"
+                                name="discountValue"
+                                placeholder="Choose"
+                                className="form-control"
+                                onChange={handleInputChange}
+                                value={product?.discountValue}
                               />
                             </div>
                           </div>
@@ -946,7 +1343,13 @@ const EditProduct = () => {
                           <div className="col-lg-4 col-sm-6 col-12">
                             <div className="input-blocks add-product">
                               <label>Quantity Alert</label>
-                              <input type="text" className="form-control" />
+                              <input
+                                type="text"
+                                name="quantityAlert"
+                                value={product?.quantityAlert}
+                                onChange={handleInputChange}
+                                className="form-control"
+                              />
                             </div>
                           </div>
                           <div className="col-lg-4 col-sm-6 col-12">
@@ -955,8 +1358,10 @@ const EditProduct = () => {
                               <div className="input-groupicon calender-input">
                                 <Calendar className="info-img" />
                                 <DatePicker
-                                  selected={selectedDate}
-                                  onChange={handleDateChange}
+                                  selected={product?.manufactureDate}
+                                  onChange={(date) =>
+                                    handleDateChange("manufactureDate", date)
+                                  }
                                   type="date"
                                   className="datetimepicker"
                                   dateFormat="dd-MM-yyyy"
@@ -971,8 +1376,10 @@ const EditProduct = () => {
                               <div className="input-groupicon calender-input">
                                 <Calendar className="info-img" />
                                 <DatePicker
-                                  selected={selectedDate1}
-                                  onChange={handleDateChange1}
+                                  selected={product?.expiryDate}
+                                  onChange={(date) =>
+                                    handleDateChange("expiryDate", date)
+                                  }
                                   type="date"
                                   className="datetimepicker"
                                   dateFormat="dd-MM-yyyy"
@@ -994,9 +1401,9 @@ const EditProduct = () => {
               <button type="button" className="btn btn-cancel me-2">
                 Cancel
               </button>
-              <Link to={route.addproduct} className="btn btn-submit">
+              <button type="submit" className="btn btn-submit">
                 Save Product
-              </Link>
+              </button>
             </div>
           </div>
         </form>

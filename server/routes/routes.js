@@ -46,6 +46,7 @@ const {
   createProduct,
   getProducts,
   getProductById,
+  updateProduct,
 } = require("../controller/product.controller");
 const {
   createSupplier,
@@ -160,6 +161,7 @@ router.post("/sales-return", createSalesReturn);
 router.get("/sales-return", getAllSalesReturns);
 // create product
 router.post("/product", createProduct);
+router.put("/product/:id", updateProduct);
 router.get("/product", getProducts);
 router.get("/product/:id", getProductById);
 // supplier routea
