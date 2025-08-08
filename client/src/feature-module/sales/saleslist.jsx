@@ -190,6 +190,7 @@ const SalesList = () => {
     const originalProduct = productsList?.data.find(
       (item) => item._id === productId
     );
+    console.log("originalProduct", originalProduct);
 
     if (!originalProduct) return;
 
@@ -219,9 +220,9 @@ const SalesList = () => {
 
     const updatedProducts = selectedProduct.map((product) => {
       if (product._id === productId) {
-        const unitPrice = Number(product.parchacePrice) || 0;
-        const discountValue = Number(product.discountValue) || 0;
-        const taxPercent = Number(product.taxValue) || 0;
+        const unitPrice = Number(originalProduct?.price) || 0;
+        const discountValue = Number(originalProduct.discountValue) || 0;
+        const taxPercent = Number(originalProduct.taxValue) || 0;
 
         const subtotal = newQty * unitPrice;
         const discountAmount = newQty * discountValue;
@@ -232,8 +233,10 @@ const SalesList = () => {
         return {
           ...product,
           quantity: newQty,
+          subtotal: subtotal.toFixed(2),
           discountAmount: discountAmount.toFixed(2),
           taxAmount: taxAmount.toFixed(2),
+          unitPrice,
           price: totalPrice.toFixed(2),
         };
       }
@@ -262,13 +265,13 @@ const SalesList = () => {
     }
 
     const qty = 1;
-    const unitPrice = Number(product.parchacePrice) || 0;
+    const unitPrice = Number(product.price) || 0;
     const discountValue = Number(product.discountValue) || 0;
     const taxPercent = Number(product.taxValue) || 0;
 
     const subtotal = qty * unitPrice;
     const discountAmount = qty * discountValue;
-    const taxableAmount = subtotal - discountAmount;
+    const taxableAmount = subtotal;
     const taxAmount = taxPercent * qty;
     const totalPrice = taxableAmount + taxAmount;
 
@@ -277,7 +280,7 @@ const SalesList = () => {
       quantity: qty,
       discountAmount: discountAmount.toFixed(2),
       taxAmount: taxAmount.toFixed(2),
-      price: totalPrice.toFixed(2),
+      price: Number(totalPrice.toFixed(2)),
     };
 
     setSelectedProduct([...selectedProduct, newProduct]);
@@ -412,7 +415,8 @@ const SalesList = () => {
     { value: "Cash", label: "Cash" },
     { value: "Online", label: "Online" },
   ];
-
+  console.log(productsList);
+  console.log(selectedProduct);
   const handleDateChangeForCreatePayment = (date) => {
     setSelectedDateForPayment(date);
   };
@@ -893,7 +897,7 @@ const SalesList = () => {
                               <tr>
                                 <th>Product</th>
                                 <th className="text-center">Stock</th>
-                                <th className="text-center">Purchase Price</th>
+                                <th className="text-center"> Price</th>
                                 <th className="text-center">Discount</th>
                                 <th className="text-center">Tax</th>
                                 <th className="text-center">Tax Amount</th>
@@ -912,7 +916,7 @@ const SalesList = () => {
                                     {product.stock}
                                   </td>
                                   <td className="text-center">
-                                    {product.parchacePrice}
+                                    {product.price}
                                   </td>
                                   <td className="text-center">
                                     {product.discountValue}
@@ -950,9 +954,7 @@ const SalesList = () => {
                                 <tr>
                                   <th>Product</th>
                                   <th className="text-center">Qty</th>
-                                  <th className="text-center">
-                                    Purchase Price
-                                  </th>
+                                  <th className="text-center">Price</th>
                                   <th className="text-center">Discount</th>
                                   <th className="text-center">Tax</th>
                                   <th className="text-center">Tax Amount</th>
@@ -984,7 +986,7 @@ const SalesList = () => {
                                       />
                                     </td>
                                     <td className="text-center">
-                                      {product.parchacePrice}
+                                      {product.price}
                                     </td>
                                     <td className="text-center">
                                       {product.discountAmount}
