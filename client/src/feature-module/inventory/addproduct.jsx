@@ -51,6 +51,7 @@ const AddProduct = () => {
     productName: "",
     slug: "",
     sku: "",
+    stock: 0,
     category: "",
     subCategory: "",
     subSubCategory: "",
@@ -710,6 +711,19 @@ const AddProduct = () => {
                         </div>
                       </div>
                       <div className="row">
+                        <div className="col-lg-6 col-sm-6 col-12">
+                          <div className="input-blocks add-product list">
+                            <label>Quantity</label>
+                            <input
+                              type="number"
+                              name="stock"
+                              className="form-control list"
+                              placeholder="Please Enter Item Code"
+                              value={product.stock}
+                              onChange={handleInputChange}
+                            />
+                          </div>
+                        </div>
                         <div className="col-lg-6 col-sm-6 col-12">
                           <div className="input-blocks add-product list">
                             <label>Item Code</label>

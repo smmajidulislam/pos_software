@@ -10,6 +10,7 @@ function validateStrictRequiredFields(body) {
     "unit",
     "parchacePrice",
     "price",
+    "stock",
   ];
   const missing = requiredFields.filter(
     (field) => body[field] === undefined || body[field] === null
@@ -67,6 +68,7 @@ exports.createProduct = async (req, res) => {
       "variantValues",
       "warranties",
       "warehouse",
+      "stock",
     ];
 
     const productData = {};
@@ -99,6 +101,7 @@ exports.createProduct = async (req, res) => {
           "discountValue",
           "taxValue",
           "quantityAlert",
+          "stock",
         ].includes(field)
       ) {
         productData[field] = Number(value) || 0;
