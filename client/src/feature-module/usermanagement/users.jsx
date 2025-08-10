@@ -147,7 +147,6 @@ const Users = () => {
       }
     });
 
-    // Actions column
     columns.push({
       title: "Actions",
       dataIndex: "actions",

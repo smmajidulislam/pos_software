@@ -1,9 +1,29 @@
 const User = require("../models/userModel");
+const bcrypt = require("bcryptjs");
 
 // Create a new user
 exports.createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    let { password, role } = req.body;
+
+    if (role !== "customer") {
+      if (!password) {
+        return res
+          .status(400)
+          .json({ error: "Password is required for this role" });
+      }
+      // bcrypt দিয়ে hash করা
+      const salt = await bcrypt.genSalt(10);
+      password = await bcrypt.hash(password, salt);
+    } else {
+      password = undefined;
+    }
+
+    const user = new User({
+      ...req.body,
+      password,
+    });
+
     const saved = await user.save();
     res.status(201).json(saved);
   } catch (error) {
