@@ -50,6 +50,7 @@ const EditProduct = () => {
   const [product, setProduct] = useState({
     store: "",
     warehouse: "",
+    stock: 0,
     productName: "",
     slug: "",
     sku: "",
@@ -178,6 +179,7 @@ const EditProduct = () => {
       setProduct({
         store: "",
         warehouse: "",
+        stock: 0,
         productName: "",
         slug: "",
         sku: "",
@@ -206,6 +208,7 @@ const EditProduct = () => {
         quantityAlert: "",
       });
     } catch (error) {
+      console.log(error);
       Sawal.fire({
         icon: "error",
         title: error?.data?.message || "Product not updated",
@@ -614,7 +617,7 @@ const EditProduct = () => {
                                   handleSelectChange("subCategory", option);
                                   setProduct((prev) => ({
                                     ...prev,
-                                    subSubCategory: "",
+                                    subSubCategory: null,
                                   }));
                                 }}
                               />
@@ -733,6 +736,19 @@ const EditProduct = () => {
                             >
                               Generate Code
                             </p>
+                          </div>
+                        </div>
+                        <div className="col-lg-6 col-sm-6 col-12">
+                          <div className="input-blocks add-product list">
+                            <label>Stock</label>
+                            <input
+                              type="number"
+                              name="stock"
+                              className="form-control list"
+                              placeholder="Please Enter Item Code"
+                              value={product?.stock}
+                              onChange={handleInputChange}
+                            />
                           </div>
                         </div>
                       </div>
