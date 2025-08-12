@@ -189,5 +189,6 @@ export const all_routes = {
   leavesemployee: "/leaves-employee",
   leavestype: "/leave-types",
   warehouses: "/warehouse",
-  coupons:"/coupons",
+  coupons: "/coupons",
+  converter: "/converter",
 };

@@ -61,12 +61,6 @@ const AllRoutes = () => {
             <Route path={route.path} element={route.element} key={id} />
           ))}
         </Route>
-
-        {/* <Route path={"/expenses/"} element={<HeaderLayout />}>
-          {expensesRoutes.map((route, id) => (
-            <Route path={route.path} element={route.element} key={id} />
-          ))}
-        </Route> */}
       </Routes>
     </div>
   );

@@ -166,6 +166,13 @@ export const SidebarData = [
             submenu: false,
           },
           {
+            label: "Converter",
+            link: "/converter",
+            icon: <Icon.ShoppingBag />,
+            showSubRoute: false,
+            submenu: false,
+          },
+          {
             label: "Purchase Order",
             link: "/purchase-order-report",
             icon: <Icon.FileMinus />,

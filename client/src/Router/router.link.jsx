@@ -15,6 +15,7 @@ import Media from "../feature-module/uiinterface/media";
 import Modals from "../feature-module/uiinterface/modals";
 import Offcanvas from "../feature-module/uiinterface/offcanvas";
 import Pagination from "../feature-module/uiinterface/pagination";
+import Converter from "../feature-module/converter/Converter";
 
 import Alert from "../feature-module/uiinterface/alert";
 import Accordion from "../feature-module/uiinterface/accordion";
@@ -1388,6 +1389,13 @@ export const publicRoutes = [
   },
   {
     id: 116,
+    path: "/converter",
+    name: "Converter",
+    element: <Converter />,
+    route: Route,
+  },
+  {
+    id: 117,
     path: "*",
     name: "NotFound",
     element: <Navigate to="/" />,
