@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const variantSchema = new mongoose.Schema(
   {
     variant: {
-      type: [String],
+      type: String,
       required: true,
     },
     pos: {

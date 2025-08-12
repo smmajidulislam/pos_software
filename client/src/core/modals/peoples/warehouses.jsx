@@ -44,7 +44,6 @@ const WareHouses = () => {
       console.error("Error creating warehouse:", err);
     }
   };
-  console.log(wareHouseData);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const toggleFilterVisibility = () => {
     setIsFilterVisible((prevVisibility) => !prevVisibility);

@@ -4,9 +4,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Select from "react-select";
 
-const EditPurchases = ({ editItem }) => {
-  console.log(editItem);
-
+const EditPurchases = () => {
   const status = [
     { value: "choose", label: "Choose" },
     { value: "received", label: "Received" },

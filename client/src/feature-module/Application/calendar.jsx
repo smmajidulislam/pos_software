@@ -129,7 +129,6 @@ const Calendar = () => {
   const handleClick = () => {
     setshow(true);
   };
-  // console.log("showmodel", showmodel);
 
   const options1 = [
     { value: "Success", label: "Success" },

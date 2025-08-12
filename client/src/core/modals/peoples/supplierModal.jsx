@@ -18,7 +18,6 @@ const SupplierModal = ({ selectedSupplier }) => {
   const [updateSupplier] = useUpdateSupplierMutation();
 
   const { pos } = usePos();
-  console.log(selectedSupplier);
 
   const handleUpdateFormSubmit = async (event) => {
     event.preventDefault();

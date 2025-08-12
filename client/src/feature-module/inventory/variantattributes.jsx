@@ -61,7 +61,7 @@ const VariantAttributes = () => {
       const transformedData = variantsItems.variants.map((item, index) => ({
         key: index,
         id: item._id,
-        variant: item.variant.join(", "), // "Color, Size"
+        variant: item.variant, // "Color, Size"
         values: item.values.join(", "), // "Red - M, Red - L..."
         createdon: formatDate(item.createdAt),
         status: item?.status || "Active",

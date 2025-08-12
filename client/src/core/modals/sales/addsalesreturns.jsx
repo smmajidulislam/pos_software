@@ -122,8 +122,7 @@ const AddSalesReturns = () => {
       };
 
       try {
-        const res = await createSalesRetrun(formData).unwrap();
-        console.log(res);
+        await createSalesRetrun(formData).unwrap();
       } catch (err) {
         Swal.fire("Error", "Failed to create sales return.", "error");
       }

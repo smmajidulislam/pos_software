@@ -49,13 +49,11 @@ const EditBrand = ({ brand }) => {
     };
 
     try {
-      const res = await updateBrand({
+      await updateBrand({
         id: brand._id,
         data: updatedData,
       }).unwrap();
-      console.log(res);
     } catch (error) {
-      console.log(error);
       toast.error("Failed to update brand");
     }
   };

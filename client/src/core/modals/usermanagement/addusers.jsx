@@ -79,8 +79,7 @@ const AddUsers = () => {
     };
 
     try {
-      const res = await createUser(payload).unwrap();
-      console.log("User created:", res);
+      await createUser(payload).unwrap();
       alert("User created successfully!");
     } catch (error) {
       console.error("Error creating user:", error);

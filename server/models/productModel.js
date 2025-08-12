@@ -59,8 +59,8 @@ const productSchema = new mongoose.Schema(
     sellingType: { type: String }, // optional enum if fixed values
     quantityAlert: { type: Number },
     store: { type: mongoose.Schema.Types.ObjectId, ref: "pos" },
-    variantAttribute: { type: String },
-    variantValues: { type: String },
+    variantAttribute: { type: [String], default: [] },
+    variantValues: { type: [String], default: [] },
     warranties: { type: Boolean, default: false },
     warehouse: { type: mongoose.Schema.Types.ObjectId, ref: "Warehouse" },
   },

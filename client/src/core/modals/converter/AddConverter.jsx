@@ -20,17 +20,15 @@ const AddConverter = () => {
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      productRef: formData.productRef,
-      from: formData.from,
-      qty: formData.qty,
-      to: formData.to,
-    };
-    console.log(payload);
+    // const payload = {
+    //   productRef: formData.productRef,
+    //   from: formData.from,
+    //   qty: formData.qty,
+    //   to: formData.to,
+    // };
     // try {
 
     //   const res = await createUser(payload).unwrap();
-    //   console.log("Converter created:", res);
     //   alert("Converter created successfully!");
 
     //   // reset form after submit

@@ -22,13 +22,11 @@ const RightSideBar = () => {
   const [preview1, setPreview1] = useState(false);
 
   const Darks = () => {
-    const Themes = document.querySelector("body");
-    console.log(Themes.setAttribute("data-theme", "dark"));
+    document.querySelector("body");
     setActive(!active);
   };
   const Lights = () => {
-    const Themes = document.querySelector("body");
-    console.log(Themes.setAttribute("data-theme", ""));
+    document.querySelector("body");
     setActive(!active);
   };
 
