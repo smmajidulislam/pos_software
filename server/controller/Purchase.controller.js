@@ -53,7 +53,7 @@ const createPurchase = async (req, res) => {
       due,
       grandTotal,
       pos,
-      quantity: Number(quantity),
+      Qty: Number(quantity),
       status: status?.value || status,
       date,
     });

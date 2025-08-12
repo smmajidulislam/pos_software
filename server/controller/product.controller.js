@@ -128,7 +128,6 @@ exports.createProduct = async (req, res) => {
 
     res.status(201).json({ success: true, product: savedProduct });
   } catch (error) {
-    console.log(error);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -179,7 +178,7 @@ exports.updateProduct = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await Product.findById(id);
+    const data = await Product.findById(id).populate("unit");
     return res.status(200).json({ message: "success", data });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Server error" });

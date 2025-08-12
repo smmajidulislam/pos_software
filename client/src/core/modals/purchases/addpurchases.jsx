@@ -18,11 +18,20 @@ const AddPurchases = () => {
   const [products, setProducts] = useState([]);
   const [Product, setProduct] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [tax, setTax] = useState(0);
+
   const [payment, setPayment] = useState(0);
   const [dueAmount, setDueAmount] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedDate, setSelectedDate] = useState(dayjs());
+
+  // New state for unit selection
+  const [unitOptions, setUnitOptions] = useState([]);
+  const [selectedUnit, setSelectedUnit] = useState(null);
 
   const { data: supplierList, isLoading: supplierLoading } =
     useGetSuppliersQuery({ posId: pos?._id }, { skip: !pos?._id });
@@ -31,6 +40,7 @@ const AddPurchases = () => {
     useGetProductByIdQuery(selectedProduct?.value, {
       skip: !selectedProduct,
     });
+
   const [createPurchace] = useCreateParchaceMutation();
   const { data: productList, isLoading: productLoading } = useGetProductsQuery(
     {
@@ -40,7 +50,6 @@ const AddPurchases = () => {
     { skip: !pos?._id }
   );
 
-  // Set suppliers and products
   useEffect(() => {
     if (supplierList?.suppliers?.length > 0 && !supplierLoading) {
       const filteredData = supplierList.suppliers.map((item) => ({
@@ -58,7 +67,22 @@ const AddPurchases = () => {
       setProducts(filteredData);
     }
     if (productListById?.data && !productLoadingById) {
-      setProduct(productListById.data);
+      const prod = productListById.data;
+      setProduct(prod);
+
+      setUnitPrice(prod.parchacePrice || 0);
+      setDiscount(prod.discountValue || 0);
+      setTax(prod.taxValue || 0);
+      setQuantity(1);
+      setPayment(0);
+      setDueAmount(0);
+
+      // Unit dropdown (single option since unit is fixed from product)
+      if (prod.unit) {
+        const opt = { value: prod.unit._id, label: prod.unit.name };
+        setUnitOptions([opt]);
+        setSelectedUnit(opt);
+      }
     }
   }, [
     supplierList,
@@ -67,6 +91,7 @@ const AddPurchases = () => {
     productLoading,
     productLoadingById,
     productListById,
+    selectedProduct,
   ]);
 
   const handleDateChange = (date) => setSelectedDate(date);
@@ -84,6 +109,26 @@ const AddPurchases = () => {
     setDueAmount(totalCost - numericDue);
   };
 
+  const handleUnitPriceChange = (e) => {
+    const val = parseFloat(e.target.value);
+    setUnitPrice(isNaN(val) ? 0 : val);
+  };
+
+  const handleDiscountChange = (e) => {
+    const val = parseFloat(e.target.value);
+    setDiscount(isNaN(val) ? 0 : val);
+  };
+
+  const handleTaxChange = (e) => {
+    const val = parseFloat(e.target.value);
+    setTax(isNaN(val) ? 0 : val);
+  };
+
+  const totalPurchasePrice = unitPrice * quantity;
+  const totalDiscount = discount * quantity;
+  const totalTax = tax * quantity;
+  const totalCost = totalPurchasePrice + totalTax - totalDiscount;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,6 +138,10 @@ const AddPurchases = () => {
       product: {
         ...Product,
         _id: selectedProduct?.value,
+        parchacePrice: unitPrice,
+        discountValue: discount,
+        taxValue: tax,
+        unit: selectedUnit?.value, // Send selected unit id
       },
       payment: payment,
       due: dueAmount,
@@ -102,27 +151,28 @@ const AddPurchases = () => {
       quantity: quantity,
     };
 
-    const res = await createPurchace(purchaseDetails).unwrap();
-    if (res?.success) {
+    try {
+      const res = await createPurchace(purchaseDetails).unwrap();
+      if (res?.success) {
+        Sawal.fire({
+          icon: "success",
+          title: "Purchase added successfully",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Purchase creation failed:", error);
       Sawal.fire({
-        icon: "success",
-        title: "Purchase added successfully",
-        showConfirmButton: false,
-        timer: 1500,
+        icon: "error",
+        title: "Failed to add purchase",
+        text: error?.data?.message || error.message,
       });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
     }
   };
-
-  const purchasePrice = Product?.parchacePrice || 0;
-  const discount = Product?.discountValue || 0;
-  const tax = Product?.taxValue || 0;
-  const totalPurchasePrice = purchasePrice * quantity;
-  const totalDiscount = discount * quantity;
-  const totalTax = tax * quantity;
-  const totalCost = totalPurchasePrice + totalTax - totalDiscount;
 
   const statusOptions = [
     { value: "received", label: "Received" },
@@ -181,7 +231,6 @@ const AddPurchases = () => {
                           value={selectedProduct}
                           onChange={(option) => {
                             setSelectedProduct(option);
-                            setQuantity(1);
                           }}
                         />
                       </div>
@@ -196,36 +245,87 @@ const AddPurchases = () => {
                       </div>
                     </div>
 
+                    {/* UPDATED TABLE */}
                     <div className="row mt-3">
                       <div className="table-responsive">
-                        <table className="table datanew text-center">
-                          <thead>
+                        <table className="table table-bordered text-center align-middle">
+                          <thead className="table-light">
                             <tr>
                               <th>Product</th>
-                              <th>Qty</th>
-                              <th>Unit Price</th>
-                              <th>Discount</th>
-                              <th>Tax</th>
-                              <th>Total</th>
+                              <th style={{ width: "80px" }}>Qty</th>
+                              <th style={{ width: "150px" }}>Unit Name</th>
+                              <th style={{ width: "120px" }}>Unit Price</th>
+                              <th style={{ width: "120px" }}>Discount</th>
+                              <th style={{ width: "120px" }}>Tax</th>
+                              <th style={{ width: "100px" }}>Total</th>
                             </tr>
                           </thead>
                           <tbody>
-                            <tr className="text-center">
-                              <td>{Product?.productName || "-"}</td>
+                            <tr>
+                              <td className="align-middle">
+                                {Product?.productName || "-"}
+                              </td>
                               <td>
                                 <input
                                   type="number"
                                   value={quantity}
                                   min={1}
                                   className="form-control text-center"
-                                  style={{ width: "80px" }}
+                                  style={{ maxWidth: "80px", margin: "auto" }}
                                   onChange={handleQuantityChange}
                                 />
                               </td>
-                              <td>{purchasePrice}</td>
-                              <td>{totalDiscount}</td>
-                              <td>{totalTax}</td>
-                              <td>{totalCost.toFixed(2)}</td>
+                              <td>
+                                <Select
+                                  options={unitOptions}
+                                  value={selectedUnit}
+                                  onChange={setSelectedUnit}
+                                  className="select"
+                                  menuPortalTarget={document.body} // dropdown কে body এর মধ্যে পোর্টাল করবে
+                                  styles={{
+                                    menuPortal: (base) => ({
+                                      ...base,
+                                      zIndex: 9999,
+                                    }),
+                                  }}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  value={unitPrice}
+                                  min={0}
+                                  step="any"
+                                  className="form-control text-center"
+                                  style={{ maxWidth: "120px", margin: "auto" }}
+                                  onChange={handleUnitPriceChange}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  value={discount}
+                                  min={0}
+                                  step="any"
+                                  className="form-control text-center"
+                                  style={{ maxWidth: "120px", margin: "auto" }}
+                                  onChange={handleDiscountChange}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  value={tax}
+                                  min={0}
+                                  step="any"
+                                  className="form-control text-center"
+                                  style={{ maxWidth: "120px", margin: "auto" }}
+                                  onChange={handleTaxChange}
+                                />
+                              </td>
+                              <td className="align-middle">
+                                {totalCost.toFixed(2)}
+                              </td>
                             </tr>
                           </tbody>
                         </table>
@@ -265,10 +365,10 @@ const AddPurchases = () => {
                       </div>
                     </div>
 
-                    <div className="modal-footer-btn mt-4">
+                    <div className="modal-footer-btn mt-4 d-flex justify-content-end gap-2">
                       <button
                         type="button"
-                        className="btn btn-cancel me-2"
+                        className="btn btn-cancel"
                         data-bs-dismiss="modal"
                       >
                         Cancel
