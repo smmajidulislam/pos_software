@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-// import { useCreateUserMutation } from "../../redux/api/userApi/userApi";
 
 const AddConverter = () => {
   const [formData, setFormData] = useState({
@@ -8,8 +7,6 @@ const AddConverter = () => {
     qty: "",
     to: "",
   });
-
-  //   const [createUser] = useCreateUserMutation();
 
   // Input change handler
   const handleChange = (e) => {
@@ -20,29 +17,8 @@ const AddConverter = () => {
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // const payload = {
-    //   productRef: formData.productRef,
-    //   from: formData.from,
-    //   qty: formData.qty,
-    //   to: formData.to,
-    // };
-    // try {
-
-    //   const res = await createUser(payload).unwrap();
-    //   alert("Converter created successfully!");
-
-    //   // reset form after submit
-    //   setFormData({
-    //     productRef: "",
-    //     from: "",
-    //     qty: "",
-    //     to: "",
-    //   });
-    // } catch (error) {
-    //   console.error("Error creating converter:", error);
-    //   alert("Failed to create converter");
-    // }
   };
+  const handleGetProduct = async () => {};
 
   return (
     <div>
@@ -67,9 +43,9 @@ const AddConverter = () => {
                 <div className="modal-body custom-modal-body">
                   <form onSubmit={handleSubmit}>
                     <div className="row">
-                      <div className="col-lg-12">
+                      <div className="col-lg-8">
                         <div className="input-blocks">
-                          <label>Product Ref</label>
+                          <label>Product Ref </label>
                           <input
                             type="text"
                             name="productRef"
@@ -79,7 +55,16 @@ const AddConverter = () => {
                           />
                         </div>
                       </div>
+                      <div className="col-lg-4 mt-4">
+                        <button
+                          onClick={handleGetProduct}
+                          className="btn btn-primary mt-2"
+                        >
+                          Submit
+                        </button>
+                      </div>
                     </div>
+
                     <div className="row">
                       {/* from */}
                       <div className="col-lg-4">

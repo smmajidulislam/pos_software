@@ -16,7 +16,6 @@ import {
   LifeBuoy,
   List,
   PlusCircle,
-  Trash2,
   X,
 } from "feather-icons-react/build/IconComponents";
 import { useDispatch, useSelector } from "react-redux";
@@ -165,7 +164,6 @@ const AddProduct = () => {
     e.preventDefault();
     try {
       await createProduct(product).unwrap();
-
       Sawal.fire({
         icon: "success",
         title: "Product created successfully",
@@ -987,164 +985,260 @@ const AddProduct = () => {
                           aria-labelledby="pills-profile-tab"
                         >
                           <div className="row select-color-add">
-                            {variant?.map((value, index) => (
-                              <div key={index} className="col-12">
+                            {variant?.map((variantName, index) => (
+                              <div
+                                key={index}
+                                className="col-12"
+                                style={{ marginBottom: "1.5rem" }}
+                              >
+                                <div
+                                  className="input-blocks add-product"
+                                  style={{
+                                    marginBottom: "0.8rem",
+                                    fontWeight: "600",
+                                  }}
+                                >
+                                  Variant: {" - " + variantName}
+                                </div>
+
                                 <div className="input-blocks add-product">
-                                  <label>Variant : {" - " + value}</label>
                                   <div className="row">
                                     {allVarianValues
-                                      ?.filter((item) => item.variant === value)
+                                      ?.filter(
+                                        (item) => item.variant === variantName
+                                      )
                                       .map((filteredItem, idx) => (
                                         <div key={idx} className="col-12">
                                           {filteredItem.values &&
                                           filteredItem.values.length > 0 ? (
                                             filteredItem.values.map(
-                                              (val, i) => (
-                                                <div
-                                                  key={i}
-                                                  style={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    marginRight: "1rem",
-                                                    marginBottom: "0.5rem",
-                                                  }}
-                                                >
-                                                  <input
-                                                    type="checkbox"
-                                                    id={`checkbox-${value}-${i}`}
-                                                    name="variantValues"
-                                                    value={val}
-                                                    checked={product.variantValues.includes(
-                                                      val
-                                                    )}
-                                                    onChange={(e) => {
-                                                      const checked =
-                                                        e.target.checked;
-                                                      setProduct((prev) => {
-                                                        let newVariantValues =
-                                                          [];
-                                                        let newVariantAttribute =
-                                                          [
-                                                            ...prev.variantAttribute,
-                                                          ];
+                                              (val, i) => {
+                                                // প্রাসঙ্গিক variantValue object খুজে বের করা হচ্ছে
+                                                const variantValueObj =
+                                                  Array.isArray(
+                                                    product.variantValues
+                                                  )
+                                                    ? product.variantValues.find(
+                                                        (v) =>
+                                                          v.variantAttribute ===
+                                                            variantName &&
+                                                          v.value === val
+                                                      )
+                                                    : undefined;
 
-                                                        if (checked) {
-                                                          // VariantValue add
-                                                          newVariantValues = [
-                                                            ...prev.variantValues,
-                                                            val,
-                                                          ];
-                                                          // VariantAttribute add if not already added
-                                                          if (
-                                                            !newVariantAttribute.includes(
-                                                              value
-                                                            )
-                                                          ) {
-                                                            newVariantAttribute.push(
-                                                              value
-                                                            );
-                                                          }
-                                                        } else {
-                                                          // VariantValue remove
-                                                          newVariantValues =
-                                                            prev.variantValues.filter(
-                                                              (v) => v !== val
-                                                            );
+                                                const isChecked =
+                                                  !!variantValueObj;
+                                                const qtyValue =
+                                                  variantValueObj &&
+                                                  variantValueObj.qty !==
+                                                    undefined
+                                                    ? variantValueObj.qty
+                                                    : "";
 
-                                                          // Check if any other variantValue of this variant is still selected
-                                                          const stillSelectedForThisVariant =
-                                                            newVariantValues.some(
-                                                              (v) =>
-                                                                allVarianValues
-                                                                  .find(
-                                                                    (item) =>
-                                                                      item.variant ===
-                                                                      value
-                                                                  )
-                                                                  ?.values.includes(
-                                                                    v
-                                                                  )
-                                                            );
-
-                                                          // যদি আর কোন ভ্যারিয়েন্ট ভ্যালু বাকি না থাকে, তাহলে variantAttribute থেকে remove কর
-                                                          if (
-                                                            !stillSelectedForThisVariant
-                                                          ) {
-                                                            newVariantAttribute =
-                                                              newVariantAttribute.filter(
-                                                                (attr) =>
-                                                                  attr !== value
-                                                              );
-                                                          }
-                                                        }
-
-                                                        return {
-                                                          ...prev,
-                                                          variantValues:
-                                                            newVariantValues,
-                                                          variantAttribute:
-                                                            newVariantAttribute,
-                                                        };
-                                                      });
-                                                    }}
+                                                return (
+                                                  <div
+                                                    key={i}
                                                     style={{
-                                                      width: "18px",
-                                                      height: "18px",
-                                                      cursor: "pointer",
-                                                    }}
-                                                  />
-                                                  <label
-                                                    htmlFor={`checkbox-${value}-${i}`}
-                                                    style={{
-                                                      cursor: "pointer",
-                                                      userSelect: "none",
-                                                      marginLeft: "0.5rem",
-                                                      lineHeight: "18px",
                                                       display: "flex",
                                                       alignItems: "center",
+                                                      marginBottom: "0.5rem",
+                                                      gap: "10px",
                                                     }}
                                                   >
-                                                    {val}
-                                                  </label>
-                                                </div>
-                                              )
+                                                    <input
+                                                      type="checkbox"
+                                                      id={`checkbox-${variantName}-${i}`}
+                                                      name="variantValues"
+                                                      value={val}
+                                                      checked={isChecked}
+                                                      onChange={(e) => {
+                                                        const checked =
+                                                          e.target.checked;
+                                                        setProduct((prev) => {
+                                                          const prevVariantValues =
+                                                            Array.isArray(
+                                                              prev.variantValues
+                                                            )
+                                                              ? [
+                                                                  ...prev.variantValues,
+                                                                ]
+                                                              : [];
+                                                          const prevVariantAttribute =
+                                                            Array.isArray(
+                                                              prev.variantAttribute
+                                                            )
+                                                              ? [
+                                                                  ...prev.variantAttribute,
+                                                                ]
+                                                              : [];
+
+                                                          let newVariantValues =
+                                                            [
+                                                              ...prevVariantValues,
+                                                            ];
+                                                          let newVariantAttribute =
+                                                            [
+                                                              ...prevVariantAttribute,
+                                                            ];
+
+                                                          if (checked) {
+                                                            if (
+                                                              !newVariantValues.some(
+                                                                (v) =>
+                                                                  v.variantAttribute ===
+                                                                    variantName &&
+                                                                  v.value ===
+                                                                    val
+                                                              )
+                                                            ) {
+                                                              newVariantValues.push(
+                                                                {
+                                                                  variantAttribute:
+                                                                    variantName,
+                                                                  value: val,
+                                                                  qty: "", // নতুন সিলেক্টেডের qty খালি
+                                                                }
+                                                              );
+                                                            }
+                                                            if (
+                                                              !newVariantAttribute.includes(
+                                                                variantName
+                                                              )
+                                                            ) {
+                                                              newVariantAttribute.push(
+                                                                variantName
+                                                              );
+                                                            }
+                                                          } else {
+                                                            newVariantValues =
+                                                              newVariantValues.filter(
+                                                                (v) =>
+                                                                  !(
+                                                                    v.variantAttribute ===
+                                                                      variantName &&
+                                                                    v.value ===
+                                                                      val
+                                                                  )
+                                                              );
+
+                                                            // চেক করো ওই variant এর আর কি option বাকি আছে কিনা
+                                                            const stillSelectedForThisVariant =
+                                                              newVariantValues.some(
+                                                                (v) =>
+                                                                  v.variantAttribute ===
+                                                                  variantName
+                                                              );
+
+                                                            if (
+                                                              !stillSelectedForThisVariant
+                                                            ) {
+                                                              newVariantAttribute =
+                                                                newVariantAttribute.filter(
+                                                                  (attr) =>
+                                                                    attr !==
+                                                                    variantName
+                                                                );
+                                                            }
+                                                          }
+
+                                                          return {
+                                                            ...prev,
+                                                            variantValues:
+                                                              newVariantValues,
+                                                            variantAttribute:
+                                                              newVariantAttribute,
+                                                          };
+                                                        });
+                                                      }}
+                                                      style={{
+                                                        width: "18px",
+                                                        height: "18px",
+                                                        cursor: "pointer",
+                                                      }}
+                                                    />
+                                                    <label
+                                                      htmlFor={`checkbox-${variantName}-${i}`}
+                                                      style={{
+                                                        cursor: "pointer",
+                                                        userSelect: "none",
+                                                        lineHeight: "18px",
+                                                        minWidth: "80px",
+                                                      }}
+                                                    >
+                                                      {val}
+                                                    </label>
+
+                                                    {/* qty input */}
+                                                    {isChecked && (
+                                                      <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="any"
+                                                        placeholder="Qty"
+                                                        value={qtyValue}
+                                                        onChange={(e) => {
+                                                          const inputQty =
+                                                            e.target.value;
+                                                          setProduct((prev) => {
+                                                            const prevVariantValues =
+                                                              Array.isArray(
+                                                                prev.variantValues
+                                                              )
+                                                                ? [
+                                                                    ...prev.variantValues,
+                                                                  ]
+                                                                : [];
+
+                                                            const variantIndex =
+                                                              prevVariantValues.findIndex(
+                                                                (v) =>
+                                                                  v.variantAttribute ===
+                                                                    variantName &&
+                                                                  v.value ===
+                                                                    val
+                                                              );
+
+                                                            if (
+                                                              variantIndex !==
+                                                              -1
+                                                            ) {
+                                                              prevVariantValues[
+                                                                variantIndex
+                                                              ] = {
+                                                                ...prevVariantValues[
+                                                                  variantIndex
+                                                                ],
+                                                                qty: inputQty,
+                                                              };
+                                                            }
+
+                                                            return {
+                                                              ...prev,
+                                                              variantValues:
+                                                                prevVariantValues,
+                                                            };
+                                                          });
+                                                        }}
+                                                        style={{
+                                                          width: "80px",
+                                                          padding: "4px 8px",
+                                                          fontSize: "14px",
+                                                          borderRadius: "4px",
+                                                          border:
+                                                            "1px solid #ccc",
+                                                          cursor: "text",
+                                                        }}
+                                                      />
+                                                    )}
+                                                  </div>
+                                                );
+                                              }
                                             )
                                           ) : (
                                             <p>No value</p>
                                           )}
                                         </div>
                                       ))}
-                                  </div>
-                                </div>
-
-                                {/* নিচের অংশ আগের মতোই থাকবে */}
-                                <div
-                                  className="selected-hide-color"
-                                  id="input-show"
-                                >
-                                  <div className="row align-items-center">
-                                    <div className="col-sm-10">
-                                      <div className="input-blocks">
-                                        <input
-                                          className="input-tags form-control"
-                                          id="inputBox"
-                                          type="text"
-                                          data-role="tagsinput"
-                                          name="variantValues"
-                                          value={product.variantValues.join(
-                                            ", "
-                                          )}
-                                          readOnly
-                                        />
-                                      </div>
-                                    </div>
-                                    <div className="col-lg-2">
-                                      <div className="input-blocks ">
-                                        <Link to="#" className="remove-color">
-                                          <Trash2 />
-                                        </Link>
-                                      </div>
-                                    </div>
                                   </div>
                                 </div>
                               </div>

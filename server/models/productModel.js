@@ -60,7 +60,17 @@ const productSchema = new mongoose.Schema(
     quantityAlert: { type: Number },
     store: { type: mongoose.Schema.Types.ObjectId, ref: "pos" },
     variantAttribute: { type: [String], default: [] },
-    variantValues: { type: [String], default: [] },
+    variantValues: {
+      type: [
+        {
+          variantAttribute: { type: String, required: true },
+          value: { type: String, required: true },
+          qty: { type: Number, default: 0 },
+        },
+      ],
+      default: [],
+    },
+
     warranties: { type: Boolean, default: false },
     warehouse: { type: mongoose.Schema.Types.ObjectId, ref: "Warehouse" },
   },

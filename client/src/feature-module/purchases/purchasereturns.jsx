@@ -22,7 +22,6 @@ import { useGetAllPurchaseReturnsQuery } from "../../core/redux/api/purchageApi/
 
 const PurchaseReturns = () => {
   const { data: purchaseReturn } = useGetAllPurchaseReturnsQuery();
-  console.log(purchaseReturn);
 
   const oldandlatestvalue = [
     { value: "date", label: "Sort by Date" },

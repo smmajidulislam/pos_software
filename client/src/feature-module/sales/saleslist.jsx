@@ -190,7 +190,6 @@ const SalesList = () => {
     const originalProduct = productsList?.data.find(
       (item) => item._id === productId
     );
-    console.log("originalProduct", originalProduct);
 
     if (!originalProduct) return;
 
