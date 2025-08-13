@@ -1,18 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ImageWithBasePath from "../../core/img/imagewithbasebath";
 import {
-  ChevronUp,
   FileText,
   PlusCircle,
-  RotateCcw,
   Sliders,
   StopCircle,
   User,
 } from "feather-icons-react/build/IconComponents";
-import { setToogleHeader } from "../../core/redux/action";
-import { useDispatch, useSelector } from "react-redux";
 import { Filter } from "react-feather";
 import Select from "react-select";
 import { DatePicker } from "antd";
@@ -40,8 +35,6 @@ import {
 } from "../../utils/Print";
 
 const SalesList = () => {
-  const dispatch = useDispatch();
-  const data = useSelector((state) => state.toggle_header);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -222,21 +215,24 @@ const SalesList = () => {
         const unitPrice = Number(originalProduct?.price) || 0;
         const discountValue = Number(originalProduct.discountValue) || 0;
         const taxPercent = Number(originalProduct.taxValue) || 0;
+        const variantQty =
+          originalProduct.variantValues.find(
+            (value) => value.variantAttribute === product.selectedVariant
+          )?.qty || 1;
 
-        const subtotal = newQty * unitPrice;
-        const discountAmount = newQty * discountValue;
-        const taxableAmount = subtotal - discountAmount;
-        const taxAmount = taxPercent * newQty;
+        // Calculate unit price based on selected variant and quantity
+        const adjustedPrice = unitPrice * (newQty / variantQty);
+        const discountAmount = adjustedPrice * (discountValue / 100);
+        const taxableAmount = adjustedPrice - discountAmount;
+        const taxAmount = taxableAmount * (taxPercent / 100);
         const totalPrice = taxableAmount + taxAmount;
 
         return {
           ...product,
           quantity: newQty,
-          subtotal: subtotal.toFixed(2),
+          price: totalPrice.toFixed(2),
           discountAmount: discountAmount.toFixed(2),
           taxAmount: taxAmount.toFixed(2),
-          unitPrice,
-          price: totalPrice.toFixed(2),
         };
       }
       return product;
@@ -244,6 +240,7 @@ const SalesList = () => {
 
     setSelectedProduct(updatedProducts);
   };
+
   const handlePaymentChange = (e) => {
     const payment = e.target.value;
     setPay(payment);
@@ -372,6 +369,32 @@ const SalesList = () => {
   const handleDeletePayment = async (id) => {
     await deletePayment(id);
   };
+  const handleVariantChange = (productId, selectedVariant) => {
+    const updatedProducts = selectedProduct.map((product) => {
+      if (product._id === productId) {
+        return {
+          ...product,
+          selectedVariant,
+          selectedVariantValue: "",
+        };
+      }
+      return product;
+    });
+    setSelectedProduct(updatedProducts); // Update the state
+  };
+
+  const handleVariantValueChange = (productId, selectedVariantValue) => {
+    const updatedProducts = selectedProduct.map((product) => {
+      if (product._id === productId) {
+        return {
+          ...product,
+          selectedVariantValue,
+        };
+      }
+      return product;
+    });
+    setSelectedProduct(updatedProducts);
+  };
 
   useEffect(() => {
     if (supplierList) {
@@ -414,7 +437,6 @@ const SalesList = () => {
     { value: "Cash", label: "Cash" },
     { value: "Online", label: "Online" },
   ];
-  console.log(productsList);
   console.log(selectedProduct);
   const handleDateChangeForCreatePayment = (date) => {
     setSelectedDateForPayment(date);
@@ -422,31 +444,6 @@ const SalesList = () => {
   const handleDeleteOrder = async (id) => {
     await deleteOrder(id);
   };
-  const renderTooltip = (props) => (
-    <Tooltip id="pdf-tooltip" {...props}>
-      Pdf
-    </Tooltip>
-  );
-  const renderExcelTooltip = (props) => (
-    <Tooltip id="excel-tooltip" {...props}>
-      Excel
-    </Tooltip>
-  );
-  const renderPrinterTooltip = (props) => (
-    <Tooltip id="printer-tooltip" {...props}>
-      Printer
-    </Tooltip>
-  );
-  const renderRefreshTooltip = (props) => (
-    <Tooltip id="refresh-tooltip" {...props}>
-      Refresh
-    </Tooltip>
-  );
-  const renderCollapseTooltip = (props) => (
-    <Tooltip id="refresh-tooltip" {...props}>
-      Collapse
-    </Tooltip>
-  );
 
   return (
     <div>
@@ -459,57 +456,7 @@ const SalesList = () => {
                 <h6>Manage Your Sales</h6>
               </div>
             </div>
-            <ul className="table-top-head">
-              <li>
-                <OverlayTrigger placement="top" overlay={renderTooltip}>
-                  <Link>
-                    <ImageWithBasePath
-                      src="assets/img/icons/pdf.svg"
-                      alt="img"
-                    />
-                  </Link>
-                </OverlayTrigger>
-              </li>
-              <li>
-                <OverlayTrigger placement="top" overlay={renderExcelTooltip}>
-                  <Link data-bs-toggle="tooltip" data-bs-placement="top">
-                    <ImageWithBasePath
-                      src="assets/img/icons/excel.svg"
-                      alt="img"
-                    />
-                  </Link>
-                </OverlayTrigger>
-              </li>
-              <li>
-                <OverlayTrigger placement="top" overlay={renderPrinterTooltip}>
-                  <Link data-bs-toggle="tooltip" data-bs-placement="top">
-                    <i data-feather="printer" className="feather-printer" />
-                  </Link>
-                </OverlayTrigger>
-              </li>
-              <li>
-                <OverlayTrigger placement="top" overlay={renderRefreshTooltip}>
-                  <Link data-bs-toggle="tooltip" data-bs-placement="top">
-                    <RotateCcw />
-                  </Link>
-                </OverlayTrigger>
-              </li>
-              <li>
-                <OverlayTrigger placement="top" overlay={renderCollapseTooltip}>
-                  <Link
-                    data-bs-toggle="tooltip"
-                    data-bs-placement="top"
-                    id="collapse-header"
-                    className={data ? "active" : ""}
-                    onClick={() => {
-                      dispatch(setToogleHeader(!data));
-                    }}
-                  >
-                    <ChevronUp />
-                  </Link>
-                </OverlayTrigger>
-              </li>
-            </ul>
+
             <div className="page-btn">
               <Link
                 to="#"
@@ -953,12 +900,13 @@ const SalesList = () => {
                                 <tr>
                                   <th>Product</th>
                                   <th className="text-center">Qty</th>
+                                  <th className="text-center">Variant</th>
+                                  <th className="text-center">Variant Value</th>
                                   <th className="text-center">Price</th>
                                   <th className="text-center">Discount</th>
-                                  <th className="text-center">Tax</th>
-                                  <th className="text-center">Tax Amount</th>
                                   <th className="text-center">Item Code</th>
                                   <th className="text-center">Total Price</th>
+
                                   <th className="text-center">Action</th>
                                 </tr>
                               </thead>
@@ -985,23 +933,74 @@ const SalesList = () => {
                                       />
                                     </td>
                                     <td className="text-center">
-                                      {product.price}
+                                      <select
+                                        value={product.selectedVariant || ""}
+                                        onChange={(e) =>
+                                          handleVariantChange(
+                                            product._id,
+                                            e.target.value
+                                          )
+                                        }
+                                        className="form-control"
+                                      >
+                                        <option value="">Select Variant</option>
+                                        {product.variantAttribute?.map(
+                                          (variant, idx) => (
+                                            <option key={idx} value={variant}>
+                                              {variant}
+                                            </option>
+                                          )
+                                        )}
+                                      </select>
                                     </td>
+                                    <td className="text-center">
+                                      <select
+                                        value={
+                                          product.selectedVariantValue || ""
+                                        }
+                                        onChange={(e) =>
+                                          handleVariantValueChange(
+                                            product._id,
+                                            e.target.value
+                                          )
+                                        }
+                                        className="form-control"
+                                        disabled={!product.selectedVariant}
+                                      >
+                                        <option value="">
+                                          Select Variant Value
+                                        </option>
+                                        {product.variantValues
+                                          ?.filter(
+                                            (variantValue) =>
+                                              variantValue.variantAttribute ===
+                                              product.selectedVariant
+                                          )
+                                          .map((variantValue, idx) => (
+                                            <option
+                                              key={idx}
+                                              value={variantValue.value}
+                                            >
+                                              {variantValue.value}
+                                            </option>
+                                          ))}
+                                      </select>
+                                    </td>
+                                    <td className="text-center">
+                                      {product.price}
+                                    </td>{" "}
+                                    {/* Price after calculation */}
                                     <td className="text-center">
                                       {product.discountAmount}
-                                    </td>
-                                    <td className="text-center">
-                                      {product.taxType}
-                                    </td>
-                                    <td className="text-center">
-                                      {product.taxAmount}
-                                    </td>
+                                    </td>{" "}
+                                    {/* Discount after calculation */}
                                     <td className="text-center">
                                       {product.itemCode}
                                     </td>
                                     <td className="text-center">
                                       {product.price}
-                                    </td>
+                                    </td>{" "}
+                                    {/* Total Price after discount */}
                                     <td
                                       className="text-center"
                                       onClick={() =>
@@ -1019,6 +1018,7 @@ const SalesList = () => {
                             </table>
                           </div>
                         )}
+
                         {/* table end */}
                         <div className="row">
                           <div className="col-lg-6 ms-auto">
