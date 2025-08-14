@@ -40,6 +40,13 @@ const SalesList = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [payingAmount, setPayingAmount] = useState(0);
   const [remaingDueAmount, setRemainingDueAmount] = useState(0);
+  const [paymentData, setPaymentData] = useState({
+    orderTax: 0,
+    discount: 0,
+    grandTotal: 0,
+    payment: 0,
+    due: 0,
+  });
   const [createPayment] = useCreatePaymentMutation();
 
   const [method, setMethod] = useState(null);
@@ -74,10 +81,8 @@ const SalesList = () => {
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedDateForPayment, setSelectedDateForPayment] = useState(dayjs());
-  const [duePayment, setDuePayment] = useState(0);
   const [createOrder] = useCreateOrderMutation();
 
-  const [pay, setPay] = useState(0);
   const { data: productsList, refetch } = useGetProductsQuery(
     {
       pos: pos?._id,
@@ -179,73 +184,6 @@ const SalesList = () => {
     }
   );
 
-  const handleQuantityChange = (productId, newQty) => {
-    const originalProduct = productsList?.data.find(
-      (item) => item._id === productId
-    );
-
-    if (!originalProduct) return;
-
-    if (newQty < 1) {
-      Swal.fire({
-        icon: "error",
-        title: "Invalid Quantity",
-        text: "Quantity must be at least 1.",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#00ff00",
-        timer: 1000,
-      });
-      return;
-    }
-
-    if (newQty > originalProduct.stock) {
-      Swal.fire({
-        icon: "error",
-        title: "Invalid Quantity",
-        text: "Quantity exceeds stock.",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#00ff00",
-        timer: 1000,
-      });
-      return;
-    }
-
-    const updatedProducts = selectedProduct.map((product) => {
-      if (product._id === productId) {
-        const unitPrice = Number(originalProduct?.price) || 0;
-        const discountValue = Number(originalProduct.discountValue) || 0;
-        const taxPercent = Number(originalProduct.taxValue) || 0;
-        const variantQty =
-          originalProduct.variantValues.find(
-            (value) => value.variantAttribute === product.selectedVariant
-          )?.qty || 1;
-
-        // Calculate unit price based on selected variant and quantity
-        const adjustedPrice = unitPrice * (newQty / variantQty);
-        const discountAmount = adjustedPrice * (discountValue / 100);
-        const taxableAmount = adjustedPrice - discountAmount;
-        const taxAmount = taxableAmount * (taxPercent / 100);
-        const totalPrice = taxableAmount + taxAmount;
-
-        return {
-          ...product,
-          quantity: newQty,
-          price: totalPrice.toFixed(2),
-          discountAmount: discountAmount.toFixed(2),
-          taxAmount: taxAmount.toFixed(2),
-        };
-      }
-      return product;
-    });
-
-    setSelectedProduct(updatedProducts);
-  };
-
-  const handlePaymentChange = (e) => {
-    const payment = e.target.value;
-    setPay(payment);
-    setDuePayment(grandTotal - payment);
-  };
   const handleSelectedProduct = (product) => {
     const alreadySelected = selectedProduct.find((p) => p._id === product._id);
     if (alreadySelected) {
@@ -260,32 +198,9 @@ const SalesList = () => {
       return;
     }
 
-    const qty = 1;
-    const unitPrice = Number(product.price) || 0;
-    const discountValue = Number(product.discountValue) || 0;
-    const taxPercent = Number(product.taxValue) || 0;
-
-    const subtotal = qty * unitPrice;
-    const discountAmount = qty * discountValue;
-    const taxableAmount = subtotal;
-    const taxAmount = taxPercent * qty;
-    const totalPrice = taxableAmount + taxAmount;
-
-    const newProduct = {
-      ...product,
-      quantity: qty,
-      discountAmount: discountAmount.toFixed(2),
-      taxAmount: taxAmount.toFixed(2),
-      price: Number(totalPrice.toFixed(2)),
-    };
-
-    setSelectedProduct([...selectedProduct, newProduct]);
+    setSelectedProduct((prevProducts) => [...prevProducts, product]);
   };
 
-  const handleDeleteProduct = (p) => {
-    const filteredData = selectedProduct.filter((item) => item._id !== p._id);
-    setSelectedProduct(filteredData);
-  };
   const handleCreateOrderSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -339,8 +254,6 @@ const SalesList = () => {
         setSelectedCustomer(null);
         setSelectedStatus(null);
         setSearch("");
-        setPay(0);
-        setDuePayment(0);
       }
     } catch (error) {
       Swal.fire({
@@ -368,32 +281,6 @@ const SalesList = () => {
   };
   const handleDeletePayment = async (id) => {
     await deletePayment(id);
-  };
-  const handleVariantChange = (productId, selectedVariant) => {
-    const updatedProducts = selectedProduct.map((product) => {
-      if (product._id === productId) {
-        return {
-          ...product,
-          selectedVariant,
-          selectedVariantValue: "",
-        };
-      }
-      return product;
-    });
-    setSelectedProduct(updatedProducts); // Update the state
-  };
-
-  const handleVariantValueChange = (productId, selectedVariantValue) => {
-    const updatedProducts = selectedProduct.map((product) => {
-      if (product._id === productId) {
-        return {
-          ...product,
-          selectedVariantValue,
-        };
-      }
-      return product;
-    });
-    setSelectedProduct(updatedProducts);
   };
 
   useEffect(() => {
@@ -443,6 +330,126 @@ const SalesList = () => {
   };
   const handleDeleteOrder = async (id) => {
     await deleteOrder(id);
+  };
+  const handleVariantChange = (id, variant) => {
+    setSelectedProduct((prev) =>
+      prev.map((p) =>
+        p._id === id
+          ? { ...p, selectedVariant: variant, selectedVariantValue: "" }
+          : p
+      )
+    );
+  };
+
+  // Variant value select
+  const handleVariantValueChange = (id, value) => {
+    setSelectedProduct((prev) =>
+      prev.map((p) =>
+        p._id === id ? { ...p, selectedVariantValue: value } : p
+      )
+    );
+  };
+
+  // Qty change with price calculation
+  const handleQuantityChanges = (id, qty) => {
+    setSelectedProduct((prev) =>
+      prev.map((p) => {
+        if (p._id !== id) return p;
+
+        let price = 0;
+        let discount = p.discountValue * qty;
+
+        // Variant না থাকলে
+        if (!p.selectedVariant || !p.selectedVariantValue) {
+          price = p.price * qty;
+        } else {
+          // Variant select থাকলে
+          const variantObj = p.variantValues.find(
+            (v) =>
+              v.variantAttribute === p.selectedVariant &&
+              v.value === p.selectedVariantValue
+          );
+
+          if (variantObj) {
+            const totalVariantStock = p.stock * variantObj.qty;
+            const unitPrice = p.price / totalVariantStock;
+            const unitDiscount = p.discountValue / totalVariantStock;
+            price = unitPrice * qty;
+            discount = unitDiscount * qty;
+          }
+        }
+
+        return {
+          ...p,
+          quantity: qty,
+          calcPrice: price,
+          calcDiscount: discount,
+          totalPrice: price - discount,
+        };
+      })
+    );
+  };
+  useEffect(() => {
+    if (selectedProduct.length > 0) {
+      const discount = Math.ceil(
+        selectedProduct
+          .reduce(
+            (acc, curr) =>
+              acc + Number(curr.calcDiscount ?? curr.discountValue ?? 0),
+            0
+          )
+          .toFixed(2)
+      );
+
+      const orderTax = Math.ceil(
+        selectedProduct
+          .reduce((acc, curr) => acc + Number(curr.taxAmount ?? 0), 0)
+          .toFixed(2)
+      );
+
+      const duePayment = Math.ceil(
+        selectedProduct
+          .reduce(
+            (acc, curr) =>
+              acc +
+              Number(curr.totalPrice ?? curr.calcPrice ?? curr.price ?? 0),
+            0
+          )
+          .toFixed(2)
+      );
+
+      const grandTotal = Math.ceil(
+        selectedProduct
+          .reduce(
+            (acc, curr) =>
+              acc +
+              Number(curr.totalPrice ?? curr.calcPrice ?? curr.price ?? 0),
+            0
+          )
+          .toFixed(2)
+      );
+
+      setPaymentData((prev) => ({
+        ...prev,
+        orderTax,
+        grandTotal,
+        discount,
+        due: duePayment,
+      }));
+    } else {
+      setPaymentData({
+        orderTax: 0,
+        discount: 0,
+        grandTotal: 0,
+        payment: 0,
+        due: 0,
+      });
+    }
+  }, [selectedProduct]);
+
+  // Delete product
+  const handleDeleteProducts = (product) => {
+    setSelectedProduct((prev) => prev.filter((p) => p._id !== product._id));
   };
 
   return (
@@ -893,131 +900,162 @@ const SalesList = () => {
                           </div>
                         )}
                         {/* table for selected product */}
-                        {selectedProduct?.length > 0 && (
-                          <div className="table-responsive no-pagination">
-                            <table className="table datanew">
-                              <thead>
-                                <tr>
-                                  <th>Product</th>
-                                  <th className="text-center">Qty</th>
-                                  <th className="text-center">Variant</th>
-                                  <th className="text-center">Variant Value</th>
-                                  <th className="text-center">Price</th>
-                                  <th className="text-center">Discount</th>
-                                  <th className="text-center">Item Code</th>
-                                  <th className="text-center">Total Price</th>
-
-                                  <th className="text-center">Action</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedProduct?.map((product, index) => (
-                                  <tr key={index}>
-                                    <td>{product.productName}</td>
-                                    <td className="text-center">
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        value={product.quantity}
-                                        onChange={(e) =>
-                                          handleQuantityChange(
-                                            product._id,
-                                            Number(e.target.value)
-                                          )
-                                        }
-                                        className="form-control text-center"
-                                        style={{
-                                          maxWidth: "80px",
-                                          margin: "0 auto",
-                                        }}
-                                      />
-                                    </td>
-                                    <td className="text-center">
-                                      <select
-                                        value={product.selectedVariant || ""}
-                                        onChange={(e) =>
-                                          handleVariantChange(
-                                            product._id,
-                                            e.target.value
-                                          )
-                                        }
-                                        className="form-control"
-                                      >
-                                        <option value="">Select Variant</option>
-                                        {product.variantAttribute?.map(
-                                          (variant, idx) => (
-                                            <option key={idx} value={variant}>
-                                              {variant}
-                                            </option>
-                                          )
-                                        )}
-                                      </select>
-                                    </td>
-                                    <td className="text-center">
-                                      <select
-                                        value={
-                                          product.selectedVariantValue || ""
-                                        }
-                                        onChange={(e) =>
-                                          handleVariantValueChange(
-                                            product._id,
-                                            e.target.value
-                                          )
-                                        }
-                                        className="form-control"
-                                        disabled={!product.selectedVariant}
-                                      >
-                                        <option value="">
-                                          Select Variant Value
-                                        </option>
-                                        {product.variantValues
-                                          ?.filter(
-                                            (variantValue) =>
-                                              variantValue.variantAttribute ===
-                                              product.selectedVariant
-                                          )
-                                          .map((variantValue, idx) => (
-                                            <option
-                                              key={idx}
-                                              value={variantValue.value}
-                                            >
-                                              {variantValue.value}
-                                            </option>
-                                          ))}
-                                      </select>
-                                    </td>
-                                    <td className="text-center">
-                                      {product.price}
-                                    </td>{" "}
-                                    {/* Price after calculation */}
-                                    <td className="text-center">
-                                      {product.discountAmount}
-                                    </td>{" "}
-                                    {/* Discount after calculation */}
-                                    <td className="text-center">
-                                      {product.itemCode}
-                                    </td>
-                                    <td className="text-center">
-                                      {product.price}
-                                    </td>{" "}
-                                    {/* Total Price after discount */}
-                                    <td
-                                      className="text-center"
-                                      onClick={() =>
-                                        handleDeleteProduct(product)
-                                      }
-                                    >
-                                      <ImageWithBasePath
-                                        src="assets/img/icons/delete.svg"
-                                        alt="img"
-                                      />
-                                    </td>
+                        <>
+                          {selectedProduct?.length > 0 && (
+                            <div className="table-responsive no-pagination">
+                              <table className="table datanew">
+                                <thead>
+                                  <tr>
+                                    <th>Product</th>
+                                    <th className="text-center">Stock</th>
+                                    <th className="text-center">Variant</th>
+                                    <th className="text-center">
+                                      Variant Value
+                                    </th>
+                                    <th className="text-center">Qty</th>
+                                    <th className="text-center">Price</th>
+                                    <th className="text-center">Discount</th>
+                                    <th className="text-center">Item Code</th>
+                                    <th className="text-center">Total Price</th>
+                                    <th className="text-center">Action</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                                </thead>
+                                <tbody>
+                                  {selectedProduct.map((product, index) => {
+                                    return (
+                                      <tr key={index}>
+                                        <td>{product.productName}</td>
+                                        <td className="text-center">
+                                          {product.stock}
+                                        </td>
+
+                                        {/* Variant Select */}
+                                        <td className="text-center">
+                                          <select
+                                            value={
+                                              product.selectedVariant || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleVariantChange(
+                                                product._id,
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            <option value="">
+                                              Select Variant
+                                            </option>
+                                            {product.variantAttribute?.map(
+                                              (attr, idx) => (
+                                                <option key={idx} value={attr}>
+                                                  {attr}
+                                                </option>
+                                              )
+                                            )}
+                                          </select>
+                                        </td>
+
+                                        {/* Variant Value Select */}
+                                        <td className="text-center">
+                                          <select
+                                            className="form-control"
+                                            disabled={!product.selectedVariant}
+                                            value={
+                                              product.selectedVariantValue || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleVariantValueChange(
+                                                product._id,
+                                                e.target.value
+                                              )
+                                            }
+                                          >
+                                            <option value="">
+                                              Select Variant Value
+                                            </option>
+                                            {product.variantValues
+                                              ?.filter(
+                                                (val) =>
+                                                  val.variantAttribute ===
+                                                  product.selectedVariant
+                                              )
+                                              .map((val, idx) => (
+                                                <option
+                                                  key={idx}
+                                                  value={val.value}
+                                                >
+                                                  {val.value}
+                                                </option>
+                                              ))}
+                                          </select>
+                                        </td>
+
+                                        {/* Qty Input */}
+                                        <td className="text-center">
+                                          <input
+                                            type="number"
+                                            min="1"
+                                            value={product.quantity || 1}
+                                            onChange={(e) =>
+                                              handleQuantityChanges(
+                                                product._id,
+                                                Number(e.target.value)
+                                              )
+                                            }
+                                            className="form-control text-center"
+                                            style={{
+                                              maxWidth: "80px",
+                                              margin: "0 auto",
+                                            }}
+                                          />
+                                        </td>
+
+                                        {/* Price */}
+                                        <td className="text-center">
+                                          {product.calcPrice?.toFixed(2) ||
+                                            product.price}
+                                        </td>
+
+                                        {/* Discount */}
+                                        <td className="text-center">
+                                          {product.calcDiscount?.toFixed(2) ||
+                                            product.discountValue}
+                                        </td>
+
+                                        {/* Item Code */}
+                                        <td className="text-center">
+                                          {product.itemCode}
+                                        </td>
+
+                                        {/* Total Price */}
+                                        <td className="text-center">
+                                          {product.totalPrice?.toFixed(2) ||
+                                            (
+                                              product.price -
+                                              product.discountValue
+                                            ).toFixed(2)}
+                                        </td>
+
+                                        {/* Delete */}
+                                        <td
+                                          className="text-center"
+                                          onClick={() =>
+                                            handleDeleteProducts(product)
+                                          }
+                                        >
+                                          <ImageWithBasePath
+                                            src="assets/img/icons/delete.svg"
+                                            alt="delete"
+                                          />
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+                        </>
 
                         {/* table end */}
                         <div className="row">
@@ -1026,34 +1064,42 @@ const SalesList = () => {
                               <ul>
                                 <li>
                                   <h4>Order Tax</h4>
-                                  <h5> {totalOrderTax}</h5>
+                                  <h5> {paymentData?.orderTax}</h5>
                                 </li>
                                 <li>
                                   <h4>Discount</h4>
-                                  <h5>{totalDiscount}</h5>
+                                  <h5>{paymentData?.discount}</h5>
                                 </li>
 
                                 <li>
                                   <h4>Grand Total</h4>
-                                  <h5>{grandTotal}</h5>
+                                  <h5>{paymentData?.grandTotal}</h5>
                                 </li>
                                 <li>
                                   <h4>Payment</h4>
                                   <input
-                                    type="text"
+                                    type="number"
                                     className="form-control text-center"
                                     name="payment"
-                                    value={pay}
-                                    onChange={(e) => handlePaymentChange(e)}
+                                    value={paymentData?.payment}
+                                    onChange={(e) =>
+                                      setPaymentData({
+                                        ...paymentData,
+                                        payment: e.target.value,
+                                        due:
+                                          paymentData?.grandTotal -
+                                          e.target.value,
+                                      })
+                                    }
                                   />
                                 </li>
                                 <li>
                                   <h4>Due</h4>
                                   <input
-                                    type="text"
+                                    type="number"
                                     className="form-control text-center"
                                     name="due"
-                                    value={duePayment}
+                                    value={paymentData?.due}
                                     readOnly
                                   />
                                 </li>
