@@ -50,18 +50,6 @@ const SalesList = () => {
   const [createPayment] = useCreatePaymentMutation();
 
   const [method, setMethod] = useState(null);
-  const grandTotal = selectedProduct.reduce(
-    (acc, curr) => acc + Number(curr.price),
-    0
-  );
-  const totalDiscount = selectedProduct.reduce(
-    (acc, curr) => acc + Number(curr.discountAmount),
-    0
-  );
-  const totalOrderTax = selectedProduct.reduce(
-    (acc, curr) => acc + Number(curr.taxAmount),
-    0
-  );
 
   const { pos } = usePos();
   const { data: supplierList, isLoading: supplierLoading } =
@@ -208,24 +196,19 @@ const SalesList = () => {
 
     // Form থেকে shipping cost নিন (যদি থাকে)
     const shippingCost = Number(fromData.shipping) || 0;
-    const payment = Number(fromData.payment) || 0;
-    const due = Number(fromData.due) || 0;
-
-    const orderDiscount = totalDiscount || 0;
-    const orderTax = totalOrderTax || 0;
 
     const payload = {
       customerId: selectedCustomer?.value,
       supplierId: selectedSupplier?.value,
       status: selectedStatus?.value,
       shipping: shippingCost,
-      discount: orderDiscount,
-      orderTax: orderTax,
-      totalDiscount: totalDiscount.toFixed(2),
-      totalTax: totalOrderTax.toFixed(2),
-      grandTotal: grandTotal.toFixed(2),
-      payment: payment.toFixed(2),
-      due: due.toFixed(2),
+      discount: paymentData?.discount,
+      orderTax: paymentData?.orderTax,
+      totalDiscount: paymentData?.discount,
+      totalTax: paymentData?.orderTax,
+      grandTotal: paymentData?.grandTotal,
+      payment: paymentData?.payment,
+      due: paymentData?.due,
       posId: pos?._id,
       products: selectedProduct.map((product) => ({
         productId: product._id,
@@ -238,6 +221,7 @@ const SalesList = () => {
         totalPrice: product.price,
       })),
     };
+    console.log(payload);
 
     try {
       const res = await createOrder(payload).unwrap();
@@ -256,6 +240,7 @@ const SalesList = () => {
         setSearch("");
       }
     } catch (error) {
+      console.log(error);
       Swal.fire({
         title: "Error!",
         text: " Customer suppier product blance fill up care fully !",
@@ -324,7 +309,6 @@ const SalesList = () => {
     { value: "Cash", label: "Cash" },
     { value: "Online", label: "Online" },
   ];
-  console.log(selectedProduct);
   const handleDateChangeForCreatePayment = (date) => {
     setSelectedDateForPayment(date);
   };

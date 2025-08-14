@@ -17,7 +17,7 @@ const createOrder = async (req, res) => {
       payment,
       due,
       grandTotal,
-      products, // products is an array of objects with _id field
+      products,
       posId,
     } = req.body;
 
